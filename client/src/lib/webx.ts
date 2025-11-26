@@ -62,6 +62,30 @@ export function decodeWebX(payload: string): WebXBlueprint | null {
   }
 }
 
+export function computeBlueprintHash(blueprint: WebXBlueprint): string {
+  try {
+    // Create a deterministic JSON string (keys sorted)
+    // Simple approach: just stringify the data and title/layout which affect rendering
+    const content = JSON.stringify({
+      title: blueprint.title,
+      layout: blueprint.layout,
+      data: blueprint.data,
+      // We exclude meta.created to allow for consistent content hashes even if re-saved
+    });
+    
+    // Simple hash function (djb2 variant)
+    let hash = 5381;
+    for (let i = 0; i < content.length; i++) {
+      hash = ((hash << 5) + hash) + content.charCodeAt(i); /* hash * 33 + c */
+    }
+    
+    // Convert to hex string (unsigned)
+    return (hash >>> 0).toString(16).padStart(8, '0').toUpperCase();
+  } catch (e) {
+    return "UNKNOWN";
+  }
+}
+
 // --- Samples ---
 
 export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {

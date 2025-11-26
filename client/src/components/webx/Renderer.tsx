@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { WebXBlueprint, ContentBlock } from "@/lib/webx";
+import { WebXBlueprint, ContentBlock, computeBlueprintHash } from "@/lib/webx";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Terminal, Cpu, Share2 } from "lucide-react";
+import { Loader2, Terminal, Cpu, Share2, ShieldCheck, Fingerprint } from "lucide-react";
 
 interface WebXRendererProps {
   blueprint: WebXBlueprint;
@@ -16,6 +16,7 @@ interface WebXRendererProps {
 export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
   const [aiContent, setAiContent] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
+  const blueprintHash = computeBlueprintHash(blueprint);
 
   // Simulate AI generation if requested
   useEffect(() => {
@@ -199,10 +200,14 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
 
             <Separator className="my-12 bg-white/10" />
             
-            <footer className="flex justify-between items-center text-xs text-muted-foreground font-mono">
+            <footer className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground font-mono gap-4">
                 <div className="flex items-center gap-2">
                     <Cpu className="w-4 h-4" />
                     Rendered Client-Side
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10" title="Deterministic Content Hash">
+                    <Fingerprint className="w-3 h-3 text-secondary" />
+                    <span>HASH: {blueprintHash}</span>
                 </div>
                 <div>
                     WebX://{blueprint.meta.version}

@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,6 +43,7 @@ export default function Composer() {
   const [generatedLink, setGeneratedLink] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isBaking, setIsBaking] = useState(false);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -53,9 +54,9 @@ export default function Composer() {
     }));
   };
 
-  const addBlock = (type: ContentBlock["type"]) => {
-    const newBlock: ContentBlock = { type, value: "", props: {} };
-    if (type === "image") {
+  const addBlock = (type: ContentBlock["type"], value?: string) => {
+    const newBlock: ContentBlock = { type, value: value || "", props: {} };
+    if (type === "image" && !value) {
         newBlock.props = { src: "https://placehold.co/600x400", alt: "Placeholder" };
         newBlock.value = "https://placehold.co/600x400"; // fallback
     }
@@ -63,6 +64,33 @@ export default function Composer() {
       ...prev,
       data: [...prev.data, newBlock]
     }));
+  };
+  
+  const handleBakeAI = () => {
+      if (!blueprint.ai?.prompt) return;
+      
+      setIsBaking(true);
+      
+      // Simulate AI call
+      setTimeout(() => {
+          const prompt = blueprint.ai?.prompt || "";
+          const generatedText = `[BAKED CONTENT]: Based on "${prompt}"...\n\nThe digital landscape shifted, revealing a structure of pure logic. It was consistent, immutable, and distributed across the mesh. Each node verified the integrity of the data, ensuring that what was written could not be unwritten.`;
+          
+          // Add the generated text as a permanent block
+          addBlock("paragraph", generatedText);
+          
+          // Clear the AI prompt so it's static now
+          setBlueprint(prev => ({
+              ...prev,
+              ai: { ...prev.ai, prompt: "", auto_generate: false }
+          }));
+          
+          setIsBaking(false);
+          toast({
+              title: "Content Baked",
+              description: "AI content has been converted to a static block for consistency.",
+          });
+      }, 1500);
   };
 
   const updateBlock = (index: number, field: keyof ContentBlock, value: any) => {
@@ -203,10 +231,24 @@ export default function Composer() {
                   
                   {/* AI Settings */}
                   <div className="space-y-2 border border-white/10 p-4 rounded-lg bg-white/5">
-                      <Label className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]" />
-                          AI Content Generation
-                      </Label>
+                      <div className="flex items-center justify-between">
+                          <Label className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]" />
+                              AI Content Generation
+                          </Label>
+                          {blueprint.ai?.prompt && (
+                              <Button 
+                                  size="sm" 
+                                  variant="secondary" 
+                                  className="h-6 text-xs bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border border-purple-500/50"
+                                  onClick={handleBakeAI}
+                                  disabled={isBaking}
+                              >
+                                  {isBaking ? <Sparkles className="w-3 h-3 animate-spin mr-1" /> : <Fingerprint className="w-3 h-3 mr-1" />}
+                                  {isBaking ? "Baking..." : "Bake to Static"}
+                              </Button>
+                          )}
+                      </div>
                       <Input 
                          placeholder="Prompt for AI generation..." 
                          value={blueprint.ai?.prompt || ""}
@@ -218,7 +260,11 @@ export default function Composer() {
                              }
                          }))}
                       />
-                      <p className="text-xs text-muted-foreground">If set, the renderer will attempt to generate content.</p>
+                      <p className="text-xs text-muted-foreground">
+                          {blueprint.ai?.prompt 
+                              ? "Click 'Bake to Static' to freeze the output for deterministic rendering." 
+                              : "If set, content can be generated dynamically or baked into the blueprint."}
+                      </p>
                   </div>
                 </div>
               </section>
