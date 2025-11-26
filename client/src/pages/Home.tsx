@@ -14,9 +14,22 @@ export default function Home() {
 
   const handleLoad = () => {
     if (!inputValue) return;
-    // If it's a full WebX:// link, strip the protocol (case insensitive)
-    // Also handle potential leading/trailing whitespace
+    
     let payload = inputValue.trim();
+    
+    // Check if it's a full URL first
+    try {
+        const url = new URL(payload);
+        // If it's a URL, extract the payload param
+        const urlPayload = url.searchParams.get("payload");
+        if (urlPayload) {
+            payload = urlPayload;
+        }
+    } catch (e) {
+        // Not a valid URL, continue treating as raw payload or WebX:// protocol
+    }
+
+    // If it's a WebX:// link, strip the protocol (case insensitive)
     if (payload.toLowerCase().startsWith("webx://")) {
         payload = payload.slice(7);
     }
