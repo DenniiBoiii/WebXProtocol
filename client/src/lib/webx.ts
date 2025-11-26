@@ -42,12 +42,17 @@ export function encodeWebX(blueprint: WebXBlueprint): string {
 
 export function decodeWebX(payload: string): WebXBlueprint | null {
   try {
+    // Clean the payload of any whitespace
+    let cleanPayload = payload.trim();
+    
     // Restore standard base64 characters
-    let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    let base64 = cleanPayload.replace(/-/g, '+').replace(/_/g, '/');
+    
     // Add padding if needed
     while (base64.length % 4) {
       base64 += '=';
     }
+    
     const json = atob(base64);
     const parsed = JSON.parse(json);
     return WebXBlueprintSchema.parse(parsed);

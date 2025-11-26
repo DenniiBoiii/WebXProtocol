@@ -14,9 +14,15 @@ export default function Home() {
 
   const handleLoad = () => {
     if (!inputValue) return;
-    // If it's a full WebX:// link, strip the protocol
-    const payload = inputValue.replace("WebX://", "");
-    setLocation(`/view?payload=${payload}`);
+    // If it's a full WebX:// link, strip the protocol (case insensitive)
+    // Also handle potential leading/trailing whitespace
+    let payload = inputValue.trim();
+    if (payload.toLowerCase().startsWith("webx://")) {
+        payload = payload.slice(7);
+    }
+    
+    // Ensure we encode special characters properly for the URL
+    setLocation(`/view?payload=${encodeURIComponent(payload)}`);
   };
 
   return (
