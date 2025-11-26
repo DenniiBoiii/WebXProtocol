@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2 } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [_, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const handleLoad = () => {
     if (!inputValue) return;
@@ -142,25 +144,56 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Samples */}
-        <div className="border-t border-white/10 pt-12">
-          <h2 className="text-2xl font-display font-bold mb-8 text-center">Try a Sample Blueprint</h2>
+        {/* The Nexus: Webstore */}
+        <div className="border-t border-white/10 pt-12 relative">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+              <div>
+                  <div className="flex items-center gap-2 mb-2">
+                      <Globe className="w-5 h-5 text-primary" />
+                      <span className="text-xs font-mono uppercase tracking-widest text-primary">Decentralized Registry</span>
+                  </div>
+                  <h2 className="text-3xl font-display font-bold text-white">The Nexus</h2>
+                  <p className="text-muted-foreground mt-2">Curated blueprints from the community.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                className="border-white/10 hover:bg-white/5 gap-2"
+                onClick={() => toast({ title: "Access Denied", description: "You must be a verified builder to upload to The Nexus.", variant: "destructive" })}
+              >
+                  <Plus className="w-4 h-4" /> Upload Blueprint
+              </Button>
+          </div>
+
           <div className="grid md:grid-cols-3 gap-6">
             {Object.entries(SAMPLE_BLUEPRINTS).map(([key, blueprint], i) => (
               <Link key={key} href={`/view?payload=${encodeWebX(blueprint)}`}>
-                <div className="group cursor-pointer">
-                  <div className="bg-gradient-to-br from-white/10 to-transparent p-[1px] rounded-xl hover:from-primary hover:to-secondary transition-all duration-500">
-                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                <div className="group cursor-pointer h-full">
+                  <div className="bg-gradient-to-br from-white/10 to-transparent p-[1px] rounded-xl hover:from-primary hover:to-secondary transition-all duration-500 h-full">
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full relative overflow-hidden flex flex-col">
+                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
                          <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-primary" />
                       </div>
-                      <Badge variant="outline" className="mb-4 border-white/10 text-xs font-mono text-muted-foreground">
-                        {blueprint.layout.toUpperCase()}
-                      </Badge>
-                      <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">{blueprint.title}</h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {blueprint.data.find(b => b.type === 'paragraph' || b.type === 'heading')?.value || "View content..."}
+                      
+                      <div className="mb-4 flex justify-between items-start">
+                          <Badge variant="outline" className="border-white/10 text-xs font-mono text-muted-foreground">
+                            {blueprint.layout.toUpperCase()}
+                          </Badge>
+                          {blueprint.meta.author === "WebX Foundation" && (
+                              <div className="flex items-center gap-1 text-[10px] text-primary font-mono border border-primary/20 px-2 py-0.5 rounded-full bg-primary/10">
+                                  <UserCheck className="w-3 h-3" /> VERIFIED
+                              </div>
+                          )}
+                      </div>
+
+                      <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">{blueprint.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+                        {blueprint.data.find(b => b.type === 'paragraph')?.value || blueprint.data.find(b => b.type === 'heading')?.value || "View content..."}
                       </p>
+                      
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
+                          <span className="w-2 h-2 rounded-full bg-white/20 group-hover:bg-primary transition-colors" />
+                          {blueprint.meta.author || "Anonymous"}
+                      </div>
                     </div>
                   </div>
                 </div>

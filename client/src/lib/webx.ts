@@ -101,16 +101,30 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
       { type: "code", value: "WebX://eyJ0aXRsZSI6IldlYlh... (Payload)" }
     ]
   },
-  product: {
-    title: "CyberDeck 2077",
-    layout: "card",
-    meta: { version: "1.0", author: "TechCorp", created: Date.now() },
+  portfolio_template: {
+    title: "Alex Chen // Design Engineer",
+    layout: "minimal",
+    meta: { version: "1.0", author: "Alex", created: Date.now() },
     data: [
-      { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000", alt: "Cyberpunk Device" } },
-      { type: "heading", value: "CyberDeck 2077" },
-      { type: "paragraph", value: "The ultimate portable hacking terminal. Features a neural link interface and quantum encryption." },
-      { type: "button", value: "Pre-order - 5000 Credits", props: { variant: "primary" } }
+        { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200", alt: "Profile" } },
+        { type: "heading", value: "Building the future of interfaces." },
+        { type: "paragraph", value: "I specialize in React, WebGL, and decentralized protocols. Currently exploring the boundaries of client-side rendering." },
+        { type: "list", value: "GitHub,Twitter,Dribbble" },
+        { type: "divider" },
+        { type: "button", value: "Contact Me", props: { variant: "primary" } }
     ]
+  },
+  event_invite: {
+      title: "Neon Nights 2025",
+      layout: "card",
+      meta: { version: "1.0", author: "EventOrg", created: Date.now() },
+      data: [
+          { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1000", alt: "Event" } },
+          { type: "heading", value: "Neon Nights: The Underground" },
+          { type: "paragraph", value: "Join us for a night of synthwave and digital art. Location: Sector 7." },
+          { type: "list", value: "Nov 15 2025,22:00 - 04:00,Free Entry" },
+          { type: "button", value: "RSVP Now", props: { variant: "secondary" } }
+      ]
   },
   ai_demo: {
     title: "AI Story Generator",
