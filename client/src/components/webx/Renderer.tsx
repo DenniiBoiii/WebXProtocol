@@ -1,0 +1,197 @@
+import React, { useEffect, useState } from "react";
+import { WebXBlueprint, ContentBlock } from "@/lib/webx";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Terminal, Cpu, Share2 } from "lucide-react";
+
+interface WebXRendererProps {
+  blueprint: WebXBlueprint;
+  className?: string;
+}
+
+export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
+  const [aiContent, setAiContent] = useState<string | null>(null);
+  const [loadingAi, setLoadingAi] = useState(false);
+
+  // Simulate AI generation if requested
+  useEffect(() => {
+    if (blueprint.ai?.auto_generate && !aiContent) {
+      setLoadingAi(true);
+      // Mock AI delay
+      const timer = setTimeout(() => {
+        setAiContent(
+          `[AI GENERATED]: Based on the prompt "${blueprint.ai?.prompt}"...\n\nThe silicon winds howled across the data plains. Unit 734 paused, its optical sensors focusing on a single, glitching pixel of organic green amidst the grey static. A flower. A relic of the Old Protocol.`
+        );
+        setLoadingAi(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [blueprint]);
+
+  const renderBlock = (block: ContentBlock, index: number) => {
+    switch (block.type) {
+      case "heading":
+        return (
+          <h2 key={index} className="text-3xl font-display font-bold mb-4 mt-6 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            {block.value}
+          </h2>
+        );
+      case "paragraph":
+        return (
+          <p key={index} className="text-lg text-muted-foreground leading-relaxed mb-4">
+            {block.value === "[AI Content Will Be Inserted Here]" && aiContent
+              ? aiContent
+              : block.value}
+            {block.value === "[AI Content Will Be Inserted Here]" && loadingAi && (
+              <span className="inline-flex items-center ml-2 text-primary animate-pulse">
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...
+              </span>
+            )}
+          </p>
+        );
+      case "image":
+        return (
+          <div key={index} className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-2xl">
+             <img 
+               src={block.props?.src || block.value} 
+               alt={block.props?.alt || "WebX Image"} 
+               className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
+             />
+          </div>
+        );
+      case "list":
+        const items = block.value?.split(",") || [];
+        return (
+          <ul key={index} className="space-y-2 my-4">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start">
+                <span className="mr-2 mt-1.5 w-1.5 h-1.5 bg-secondary rounded-full shadow-[0_0_8px_var(--color-secondary)]" />
+                <span className="text-foreground/90">{item.trim()}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      case "code":
+        return (
+          <div key={index} className="bg-black/50 border border-white/10 rounded-lg p-4 my-4 font-mono text-sm overflow-x-auto relative group">
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">CODE</Badge>
+            </div>
+            <pre className="text-primary/90">{block.value}</pre>
+          </div>
+        );
+      case "quote":
+        return (
+          <blockquote key={index} className="border-l-4 border-primary pl-4 italic text-xl text-white/80 my-6">
+            "{block.value}"
+          </blockquote>
+        );
+      case "button":
+        return (
+          <Button key={index} className="w-full md:w-auto mt-4" variant={block.props?.variant === "primary" ? "default" : "secondary"}>
+            {block.value}
+          </Button>
+        );
+      case "input":
+        return (
+            <div key={index} className="my-4 space-y-2">
+                {block.props?.label && <label className="text-sm font-medium text-muted-foreground">{block.props.label}</label>}
+                <Input placeholder={block.value} />
+            </div>
+        )
+      case "divider":
+          return <Separator key={index} className="my-8 bg-white/10" />
+      default:
+        return null;
+    }
+  };
+
+  const renderLayout = () => {
+    switch (blueprint.layout) {
+      case "card":
+        return (
+          <div className="flex justify-center items-center min-h-[50vh] p-4">
+            <Card className="w-full max-w-md bg-card/50 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden">
+              {/* Image blocks usually go first in cards */}
+              {blueprint.data.filter(b => b.type === "image").map(renderBlock)}
+              <CardHeader>
+                <CardTitle className="text-2xl font-display text-glow">{blueprint.title}</CardTitle>
+                <div className="flex gap-2 text-xs text-muted-foreground font-mono uppercase tracking-widest">
+                   <span>v{blueprint.meta.version}</span>
+                   <span>•</span>
+                   <span>{blueprint.meta.author || "Anon"}</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {blueprint.data.filter(b => b.type !== "image").map(renderBlock)}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      
+      case "minimal":
+          return (
+              <div className="max-w-2xl mx-auto p-8 md:p-12 font-mono text-sm">
+                  <div className="mb-12 border-b border-white/10 pb-4 flex justify-between items-baseline">
+                    <h1 className="text-xl font-bold uppercase tracking-widest">{blueprint.title}</h1>
+                    <span className="text-muted-foreground">{new Date(blueprint.meta.created).toLocaleDateString()}</span>
+                  </div>
+                  <div className="space-y-8">
+                      {blueprint.data.map(renderBlock)}
+                  </div>
+              </div>
+          )
+
+      case "article":
+      default:
+        return (
+          <article className="max-w-3xl mx-auto px-6 py-12">
+            <header className="mb-12 text-center">
+               <Badge variant="outline" className="mb-4 border-secondary/50 text-secondary hover:bg-secondary/10">
+                  WebX Protocol // {blueprint.layout.toUpperCase()}
+               </Badge>
+              <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight mb-6 text-glow">
+                {blueprint.title}
+              </h1>
+              <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground font-mono">
+                <span className="flex items-center gap-1"><Terminal className="w-3 h-3" /> {blueprint.meta.author || "Unknown Author"}</span>
+                <span className="w-1 h-1 bg-white/20 rounded-full" />
+                <span>{new Date(blueprint.meta.created).toLocaleDateString()}</span>
+              </div>
+            </header>
+            
+            <div className="prose prose-invert prose-lg max-w-none">
+              {blueprint.data.map(renderBlock)}
+            </div>
+
+            <Separator className="my-12 bg-white/10" />
+            
+            <footer className="flex justify-between items-center text-xs text-muted-foreground font-mono">
+                <div className="flex items-center gap-2">
+                    <Cpu className="w-4 h-4" />
+                    Rendered Client-Side
+                </div>
+                <div>
+                    WebX://{blueprint.meta.version}
+                </div>
+            </footer>
+          </article>
+        );
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={className}
+    >
+      {renderLayout()}
+    </motion.div>
+  );
+}
