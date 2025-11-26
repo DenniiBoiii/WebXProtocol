@@ -121,5 +121,26 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
       { type: "heading", value: "A New Beginning" },
       { type: "paragraph", value: "[AI Content Will Be Inserted Here]" }
     ]
+  },
+  whitepaper: {
+      title: "WebX Protocol Specification",
+      layout: "article",
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now() },
+      data: [
+          { type: "heading", value: "Abstract" },
+          { type: "paragraph", value: "WebX is a serverless, payload-based web protocol designed to decentralized content distribution. Unlike HTTP, which points to a resource on a server, a WebX link carries the entire blueprint of the page within the URL itself." },
+          { type: "divider" },
+          { type: "heading", value: "1. Architecture" },
+          { type: "paragraph", value: "The protocol relies on three core pillars:" },
+          { type: "list", value: "Client-Side Rendering (CSR),URL-Safe Base64 Encoding,JSON Blueprint Schema" },
+          { type: "paragraph", value: "By encoding the content into the URL, WebX eliminates the need for hosting infrastructure for static content. The browser (or WebX Client) acts as the interpreter, hydrating the JSON into a visual interface." },
+          { type: "heading", value: "2. The Schema" },
+          { type: "paragraph", value: "A valid WebX payload must adhere to the following structure:" },
+          { type: "code", value: "{\n  \"title\": \"String\",\n  \"layout\": \"article | card | minimal\",\n  \"data\": [ ...Blocks ],\n  \"meta\": { ... },\n  \"ai\": { \"prompt\": \"...\" } \n}" },
+          { type: "heading", value: "3. Determinism & AI" },
+          { type: "paragraph", value: "WebX supports both dynamic and deterministic rendering. Content can be baked into the blueprint for immutability (guaranteed by content hashing), or generated on-the-fly using embedded AI prompts." },
+          { type: "quote", value: "The URL is the database." },
+          { type: "button", value: "Start Building", props: { variant: "primary" } }
+      ]
   }
 };

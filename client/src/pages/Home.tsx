@@ -97,6 +97,11 @@ export default function Home() {
                    <Code className="mr-2 w-4 h-4" /> Open Composer
                 </Button>
              </Link>
+             <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.whitepaper)}`}>
+                <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
+                   Read the Whitepaper
+                </Button>
+             </Link>
           </div>
         </div>
 
