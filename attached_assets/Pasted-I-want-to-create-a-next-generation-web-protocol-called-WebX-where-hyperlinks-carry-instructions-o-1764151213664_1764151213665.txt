@@ -1,0 +1,48 @@
+I want to create a next-generation web protocol called WebX:// where hyperlinks carry instructions or page blueprints instead of pointing to a server. The goal is to make a proof-of-concept prototype fully on Replit. Here are the requirements:
+
+1. **WebX Protocol Basics**  
+   - Hyperlinks are in the format `WebX://<payload>`, where `<payload>` is URL-safe base64 JSON.  
+   - Each JSON blueprint contains:
+       - title (string)
+       - layout (one of ["article", "card", "newsfeed", "gallery", "form"])
+       - data (array of content objects: heading, paragraph, list, etc.)
+       - ai (optional instructions for AI-assisted content generation)
+       - meta (version, author, protocol name)
+   - Replit should be able to decode and render the payload client-side without downloading HTML from a server.
+
+2. **WebX Renderer (Client-Side)**  
+   - HTML/JS page that:
+       - Accepts a WebX:// link or base64 payload input.  
+       - Decodes the payload and renders it using simple styled cards or article layouts.  
+       - Optionally, if `ai` instructions are present, can call an AI endpoint or stub for content expansion.  
+   - Must show a live preview of the decoded JSON and the rendered page.  
+   - Should be mobile-friendly and simple to deploy.
+
+3. **WebX Link Composer (Client-Side)**  
+   - Web UI to create a blueprint:
+       - Fields for title, layout, content blocks, and AI instructions.  
+       - Exports a valid WebX:// link (URL-safe base64 of JSON).  
+       - Live preview of the rendered page from the blueprint.  
+
+4. **Optional AI Integration (Future Step)**  
+   - Provide a stub API endpoint that can accept a prompt and return generated content.  
+   - Later, this can be connected to OpenAI, TinyLlama, or other models.
+
+5. **Project Setup**  
+   - Replit project should be static or Node-based (whichever is easiest to integrate AI later).  
+   - Include instructions in the README for:
+       - Testing a WebX link  
+       - Creating blueprints with the composer  
+       - Rendering pages from WebX:// links
+
+6. **Stretch Goals** (if possible)  
+   - Add a browser-like UI that intercepts WebX:// links.  
+   - Multiple layouts/themes support.  
+   - Ability to save/load multiple blueprints locally.  
+
+**Goal:** By the end, I want a working Replit project that allows me to:
+- Paste a WebX:// link and see the page generated locally.  
+- Build new WebX links using a simple composer.  
+- Preview blueprints and optionally call a placeholder AI function.  
+
+Please generate the Replit project scaffold with the HTML, JS, CSS, and any necessary backend stubs for AI integration.
