@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,6 +18,14 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const DEFAULT_BLUEPRINT: WebXBlueprint = {
   title: "My New Page",
@@ -32,6 +40,9 @@ const DEFAULT_BLUEPRINT: WebXBlueprint = {
 export default function Composer() {
   const [blueprint, setBlueprint] = useState<WebXBlueprint>(DEFAULT_BLUEPRINT);
   const [activeTab, setActiveTab] = useState("editor");
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -81,14 +92,22 @@ export default function Composer() {
     }));
   };
 
-  const handleSave = () => {
+  const handleGenerate = () => {
       const payload = encodeWebX(blueprint);
       const url = `${window.location.origin}/view?payload=${payload}`;
-      navigator.clipboard.writeText(url);
-      toast({
-          title: "Link Generated!",
-          description: "WebX link copied to clipboard.",
-      });
+      setGeneratedLink(url);
+      setIsDialogOpen(true);
+      setCopied(false);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(generatedLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    toast({
+        title: "Link Copied",
+        description: "WebX link copied to clipboard.",
+    });
   };
 
   return (
@@ -102,9 +121,38 @@ export default function Composer() {
           <h1 className="font-display font-bold text-lg">WebX Composer</h1>
         </div>
         <div className="flex gap-2">
-           <Button size="sm" onClick={handleSave} className="bg-primary hover:bg-primary/90 text-white">
-             <Save className="w-4 h-4 mr-2" /> Generate Link
-           </Button>
+           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+             <DialogTrigger asChild>
+               <Button size="sm" onClick={handleGenerate} className="bg-primary hover:bg-primary/90 text-white">
+                 <Save className="w-4 h-4 mr-2" /> Generate Link
+               </Button>
+             </DialogTrigger>
+             <DialogContent className="sm:max-w-md border-white/10 bg-background/95 backdrop-blur-xl">
+               <DialogHeader>
+                 <DialogTitle>Your WebX Link is Ready</DialogTitle>
+                 <DialogDescription>
+                   Share this link to let anyone view your page instantly without servers.
+                 </DialogDescription>
+               </DialogHeader>
+               <div className="flex items-center space-x-2 mt-4">
+                 <div className="grid flex-1 gap-2">
+                   <Label htmlFor="link" className="sr-only">
+                     Link
+                   </Label>
+                   <Input
+                     id="link"
+                     readOnly
+                     value={generatedLink}
+                     className="bg-white/5 border-white/10 font-mono text-xs h-9"
+                   />
+                 </div>
+                 <Button type="submit" size="sm" className="px-3" onClick={handleCopy}>
+                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                   <span className="sr-only">Copy</span>
+                 </Button>
+               </div>
+             </DialogContent>
+           </Dialog>
         </div>
       </header>
 
