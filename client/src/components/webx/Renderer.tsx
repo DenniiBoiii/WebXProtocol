@@ -929,7 +929,9 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                         {/* To: */}
                         <div>
                           <p className="text-xs font-serif text-amber-900/60 mb-1 tracking-wide">to:</p>
-                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6" />
+                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
+                            {(blueprint.meta as any).to && <p className="font-serif text-amber-900 text-xs">{(blueprint.meta as any).to}</p>}
+                          </div>
                           <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6" />
                         </div>
 

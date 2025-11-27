@@ -208,6 +208,7 @@ export const WebXBlueprintSchema = z.object({
     category: z.string().optional(),
     featured: z.boolean().optional(),
     downloads: z.number().optional(),
+    to: z.string().optional(),
   }),
 });
 

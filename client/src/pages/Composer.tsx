@@ -426,13 +426,26 @@ export default function Composer() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Author</Label>
+                        <Label>{blueprint.layout === "postcard" ? "From (Your Name)" : "Author"}</Label>
                         <Input 
                             value={blueprint.meta.author} 
                             onChange={(e) => updateMeta('author', e.target.value)} 
                         />
                       </div>
                   </div>
+
+                  {/* Postcard-specific fields */}
+                  {blueprint.layout === "postcard" && (
+                    <div className="space-y-2 border border-amber-400/30 p-4 rounded-lg bg-amber-400/5">
+                      <Label className="text-amber-400">📮 Postcard Recipient</Label>
+                      <Input 
+                          placeholder="Who is this postcard for?"
+                          value={(blueprint.meta as any).to || ""} 
+                          onChange={(e) => updateMeta('to', e.target.value)} 
+                      />
+                      <p className="text-xs text-muted-foreground">This will appear in the "to:" field on the postcard</p>
+                    </div>
+                  )}
                   
                   {/* Expiration Settings */}
                   <div className="space-y-2 border border-green-400/30 p-4 rounded-lg bg-green-400/5">
