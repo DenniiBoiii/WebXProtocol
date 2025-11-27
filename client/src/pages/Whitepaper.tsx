@@ -936,6 +936,72 @@ export default function Whitepaper() {
 
                 <Card className="bg-white/5 border-white/10">
                   <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">Size Limitations & Format Selection</h3>
+                    <p className="text-muted-foreground mb-6">
+                      The choice between URL links and .webx files is largely determined by content size:
+                    </p>
+                    <div className="space-y-6">
+                      <div className="bg-black/50 border border-white/10 rounded-lg p-6">
+                        <p className="font-bold text-white mb-4">URL-Encoded Links: Hard Limits</p>
+                        <ul className="space-y-3 text-sm text-muted-foreground font-mono">
+                          <li><span className="text-primary">Practical URL limit:</span> 2-8 KB (most browsers)</li>
+                          <li><span className="text-primary">After compression:</span> ~8-32 KB uncompressed content</li>
+                          <li><span className="text-primary">Typical capacity:</span> Articles, blog posts, forms</li>
+                          <li><span className="text-primary">Reason for limits:</span> Browser + server URL length restrictions</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-green-400/10 to-green-400/5 border border-green-400/30 rounded-lg p-6">
+                        <p className="font-bold text-green-400 mb-4">.webx Files: Unlimited</p>
+                        <ul className="space-y-3 text-sm text-muted-foreground font-mono">
+                          <li><span className="text-green-400">File size limit:</span> None (just a JSON file)</li>
+                          <li><span className="text-green-400">Practical capacity:</span> MB, GB, or larger</li>
+                          <li><span className="text-green-400">Typical use:</span> Large datasets, multimedia, documentation</li>
+                          <li><span className="text-green-400">Reason for freedom:</span> Files are transferred as-is, no URL parsing</li>
+                        </ul>
+                      </div>
+
+                      <div className="bg-white/5 p-6 rounded border border-white/10">
+                        <p className="font-bold text-white mb-4">Size Guide by Content Type</p>
+                        <div className="space-y-3 text-sm">
+                          {[
+                            { type: "Tweet or short message", size: "100 bytes", format: "URL" },
+                            { type: "Blog post (2,000 words)", size: "8-15 KB", format: "URL" },
+                            { type: "Technical documentation", size: "50-100 KB", format: ".webx" },
+                            { type: "High-res images (10 images)", size: "2-5 MB", format: ".webx" },
+                            { type: "Video or multimedia", size: "100 MB+", format: ".webx" },
+                            { type: "Complete eBook", size: "1-10 MB", format: ".webx" },
+                            { type: "Database exports", size: "Unlimited", format: ".webx" }
+                          ].map((item, idx) => (
+                            <div key={idx} className="flex justify-between items-center p-3 bg-white/5 rounded border border-white/10">
+                              <span className="text-muted-foreground">{item.type}</span>
+                              <div className="flex items-center gap-4">
+                                <span className="text-xs bg-white/10 px-2 py-1 rounded font-mono">{item.size}</span>
+                                <span className={`text-xs px-2 py-1 rounded font-mono ${
+                                  item.format === "URL" 
+                                    ? "bg-primary/20 text-primary" 
+                                    : "bg-green-400/20 text-green-400"
+                                }`}>
+                                  {item.format}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="bg-white/5 p-6 rounded border border-white/10">
+                        <p className="font-bold text-white mb-3">The Design Philosophy</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          WebX is intentionally designed with <strong>two complementary formats</strong> because forcing everything into URLs would be counterproductive. URL links handle the common case (fast, viral, shareable), while .webx files handle unlimited content with zero compromise. This mirrors how the web itself evolved—not everything needs to be in a URL. Some things are better as files.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
                     <h3 className="text-xl font-bold mb-4">Use Cases by Format</h3>
                     <div className="space-y-4">
                       {[
