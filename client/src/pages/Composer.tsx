@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap, Separator } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,6 +18,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { Separator as SeparatorComp } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,7 @@ export default function Composer() {
   const [isBaking, setIsBaking] = useState(false);
   const [useCompression, setUseCompression] = useState(false);
   const [showQR, setShowQR] = useState(true);
+  const [expirationMinutes, setExpirationMinutes] = useState<number | null>(null);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   
@@ -126,7 +128,22 @@ export default function Composer() {
   };
 
   const handleGenerate = () => {
-      const payload = encodeWebX(blueprint, useCompression);
+      let blueprintToEncode = blueprint;
+      
+      // Add expiration to blueprint if set
+      if (expirationMinutes !== null) {
+        const expirationTime = Date.now() + (expirationMinutes * 60 * 1000);
+        blueprintToEncode = {
+          ...blueprint,
+          jwt: {
+            token: "demo_token_" + Math.random().toString(36).slice(2, 11),
+            expiration: expirationTime,
+            permissions: ["read"]
+          }
+        };
+      }
+      
+      const payload = encodeWebX(blueprintToEncode, useCompression);
       const url = `${window.location.origin}/view?payload=${payload}`;
       setGeneratedLink(url);
       setIsDialogOpen(true);
@@ -288,6 +305,38 @@ export default function Composer() {
                       </div>
                   </div>
                   
+                  {/* Expiration Settings */}
+                  <div className="space-y-2 border border-green-400/30 p-4 rounded-lg bg-green-400/5">
+                      <Label className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#4ade80]" />
+                          Link Expiration (Optional)
+                      </Label>
+                      <Select 
+                          value={expirationMinutes?.toString() || "never"}
+                          onValueChange={(v) => setExpirationMinutes(v === "never" ? null : parseInt(v))}
+                      >
+                          <SelectTrigger className="bg-white/5 border-white/10">
+                              <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                              <SelectItem value="never">No Expiration</SelectItem>
+                              <SelectItem value="10">10 Minutes</SelectItem>
+                              <SelectItem value="60">1 Hour</SelectItem>
+                              <SelectItem value="1440">1 Day</SelectItem>
+                              <SelectItem value="10080">1 Week</SelectItem>
+                              <SelectItem value="43200">30 Days</SelectItem>
+                          </SelectContent>
+                      </Select>
+                      {expirationMinutes && (
+                        <p className="text-xs text-green-400 font-mono">
+                          Link expires in {expirationMinutes} minute{expirationMinutes > 1 ? 's' : ''} ({new Date(Date.now() + expirationMinutes * 60 * 1000).toLocaleString()})
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                          Embed an expiration timestamp in the blueprint. Recipients will see "Access Denied" after expiration.
+                      </p>
+                  </div>
+
                   {/* AI Settings */}
                   <div className="space-y-2 border border-white/10 p-4 rounded-lg bg-white/5">
                       <div className="flex items-center justify-between">
@@ -328,7 +377,7 @@ export default function Composer() {
                 </div>
               </section>
 
-              <Separator className="bg-white/10" />
+              <SeparatorComp className="bg-white/10" />
 
               {/* Blocks Section */}
               <section className="space-y-4">

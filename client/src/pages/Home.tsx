@@ -638,6 +638,140 @@ export default function Home() {
           </div>
         </div>
 
+        {/* WebX Extensions & Addons */}
+        <div className="border-t border-white/10 pt-12 mb-24 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Layers className="w-5 h-5 text-purple-400" />
+              <span className="text-xs font-mono uppercase tracking-widest text-purple-400">Open Protocol</span>
+            </div>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">WebX Extensions & Addons</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              HTTP started as simple, then got TCP, HTTPS, HTTP/2, compression. WebX is built the same way—extensible and community-driven.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: How Extensions Work */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 h-full">
+                <h3 className="text-xl font-display font-bold mb-6 text-purple-400">Building Extensions</h3>
+                <div className="space-y-4">
+                  <div className="border-l-2 border-purple-400/50 pl-4">
+                    <p className="font-semibold text-white">Custom Layouts</p>
+                    <p className="text-xs text-muted-foreground mt-1">Add new layout types beyond article, card, newsfeed. Dashboard layouts, kanban boards, timelines, galleries.</p>
+                  </div>
+                  <div className="border-l-2 border-purple-400/50 pl-4">
+                    <p className="font-semibold text-white">Compression Algorithms</p>
+                    <p className="text-xs text-muted-foreground mt-1">Implement alternative compression strategies. WebX officially supports base62 + gzip, but you can add brotli, zstd, or custom compression.</p>
+                  </div>
+                  <div className="border-l-2 border-purple-400/50 pl-4">
+                    <p className="font-semibold text-white">Custom Renderers</p>
+                    <p className="text-xs text-muted-foreground mt-1">Build platform-specific renderers for iOS, Android, Desktop, CLI. The protocol is open—render it anywhere.</p>
+                  </div>
+                  <div className="border-l-2 border-purple-400/50 pl-4">
+                    <p className="font-semibold text-white">Authentication Schemes</p>
+                    <p className="text-xs text-muted-foreground mt-1">Add OAuth, biometric verification, multi-signature, ZK proofs. Extend beyond JWT for specialized use cases.</p>
+                  </div>
+                  <div className="border-l-2 border-purple-400/50 pl-4">
+                    <p className="font-semibold text-white">Content Plugins</p>
+                    <p className="text-xs text-muted-foreground mt-1">Video embeds, 3D viewers, interactive charts, games. Custom content types that render client-side.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right: The Roadmap */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 h-full">
+                <h3 className="text-xl font-display font-bold mb-6 text-purple-400">Extension Registry & Community</h3>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">Phase 1: Foundation (Current)</p>
+                    <p className="text-xs text-muted-foreground">Core protocol. Base layouts. JWT auth. Base62 encoding. Proof of concept complete.</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">Phase 2: Extensions (Next 6 months)</p>
+                    <p className="text-xs text-muted-foreground">Official extension API. Community registry for layouts, renderers, and compression plugins. Standardized packaging.</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">Phase 3: Ecosystem (Future)</p>
+                    <p className="text-xs text-muted-foreground">Package manager for WebX addons. Browser/client marketplace. Multi-signature verification. Official spec versioning.</p>
+                  </div>
+                  <div className="p-4 bg-purple-400/10 border border-purple-400/30 rounded-lg">
+                    <p className="text-xs font-mono text-purple-400 mb-2">Contribute to WebX</p>
+                    <p className="text-xs text-muted-foreground">Have an idea for an extension? Fork the repo, build your addon, and submit for review. Great extensions get promoted in The Nexus.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Extension Examples */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-12"
+          >
+            <h3 className="text-2xl font-display font-bold mb-6">Example Extensions (Possible Today)</h3>
+            <div className="grid md:grid-cols-3 gap-4">
+              {[
+                { title: "Dashboard Layout", desc: "Grid-based layouts with widgets, drag-drop, real-time updates" },
+                { title: "E-Commerce Plugin", desc: "Product cards, shopping carts, checkout flows in WebX format" },
+                { title: "Kanban Renderer", desc: "Task boards, drag-drop columns, status management" },
+                { title: "Presentation Mode", desc: "Slide decks, animations, speaker notes embedded in URL" },
+                { title: "Zstd Compression", desc: "Alternative compression using zstandard for 70%+ reduction" },
+                { title: "Analytics Addon", desc: "View insights about how your links are being shared" }
+              ].map((ext, idx) => (
+                <Card key={idx} className="bg-white/5 border-white/10">
+                  <CardContent className="p-4">
+                    <p className="font-semibold text-white text-sm mb-1">{ext.title}</p>
+                    <p className="text-xs text-muted-foreground">{ext.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* How it Works Technically */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card className="bg-gradient-to-r from-purple-400/10 to-pink-400/10 border-purple-400/30">
+              <CardContent className="p-8">
+                <h3 className="text-xl font-display font-bold mb-4">How It Works Technically</h3>
+                <div className="bg-black/50 border border-white/10 rounded-lg p-4 mb-6 font-mono text-xs text-muted-foreground space-y-2">
+                  <p><span className="text-purple-400">// Base protocol</span></p>
+                  <p>blueprint = {"{ layout: 'custom_layout', data: [...], extensions: {...} }"}</p>
+                  <p><span className="text-purple-400">// Extensions live in the blueprint</span></p>
+                  <p>extensions = {"{ compression: 'zstd', renderer: 'v2', auth: 'oauth' }"}</p>
+                  <p><span className="text-purple-400">// Renderers know how to handle them</span></p>
+                  <p>if(blueprint.extensions.renderer === 'v2') loadExtension('v2-renderer')</p>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Extensions are declared in the blueprint metadata. If a client doesn't support an extension, it degrades gracefully to a base renderer. This mirrors how browsers handle new HTML5 features.
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
         {/* The Nexus: Webstore */}
         <div className="border-t border-white/10 pt-12 relative">
           {/* Header */}
