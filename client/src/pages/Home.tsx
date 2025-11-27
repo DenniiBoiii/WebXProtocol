@@ -96,6 +96,8 @@ export default function Home() {
               The serverless web. Hyperlinks that carry their own blueprints. 
               <br className="hidden md:block" />
               Instant rendering, zero infrastructure, AI-ready.
+              <br className="hidden md:block" />
+              Share as URLs or .webx files—unlimited flexibility.
             </p>
           </motion.div>
 
