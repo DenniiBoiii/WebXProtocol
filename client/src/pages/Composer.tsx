@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { WebXBlueprint, ContentBlock, encodeWebX } from "@/lib/webx";
+import { WebXBlueprint, ContentBlock, encodeWebX, getPayloadMetrics } from "@/lib/webx";
 import { WebXRenderer } from "@/components/webx/Renderer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import QRCode from "qrcode.react";
 
 const DEFAULT_BLUEPRINT: WebXBlueprint = {
   title: "My New Page",
@@ -44,8 +45,12 @@ export default function Composer() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isBaking, setIsBaking] = useState(false);
+  const [useCompression, setUseCompression] = useState(false);
+  const [showQR, setShowQR] = useState(true);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  const metrics = getPayloadMetrics(blueprint);
 
   const updateMeta = (key: string, value: string) => {
     setBlueprint(prev => ({
@@ -121,7 +126,7 @@ export default function Composer() {
   };
 
   const handleGenerate = () => {
-      const payload = encodeWebX(blueprint);
+      const payload = encodeWebX(blueprint, useCompression);
       const url = `${window.location.origin}/view?payload=${payload}`;
       setGeneratedLink(url);
       setIsDialogOpen(true);
@@ -155,13 +160,62 @@ export default function Composer() {
                  <Save className="w-4 h-4 mr-2" /> Generate Link
                </Button>
              </DialogTrigger>
-             <DialogContent className="sm:max-w-md border-white/10 bg-background/95 backdrop-blur-xl">
+             <DialogContent className="sm:max-w-2xl border-white/10 bg-background/95 backdrop-blur-xl max-h-[90vh] overflow-y-auto">
                <DialogHeader>
                  <DialogTitle>Your WebX Link is Ready</DialogTitle>
                  <DialogDescription>
-                   Share this link to let anyone view your page instantly without servers.
+                   Share instantly or scan with your phone.
                  </DialogDescription>
                </DialogHeader>
+               
+               {/* Payload Metrics */}
+               <div className="grid grid-cols-2 gap-3 mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                 <div>
+                   <p className="text-xs text-muted-foreground font-mono">Original</p>
+                   <p className="text-sm font-bold">{(metrics.originalSize / 1024).toFixed(1)} KB</p>
+                 </div>
+                 <div>
+                   <p className="text-xs text-muted-foreground font-mono">Compressed</p>
+                   <p className="text-sm font-bold text-green-400">{(metrics.base64CompressedSize / 1024).toFixed(1)} KB</p>
+                 </div>
+                 <div>
+                   <p className="text-xs text-muted-foreground font-mono">Ratio</p>
+                   <p className="text-sm font-bold">{metrics.compressionRatio}% smaller</p>
+                 </div>
+                 <div>
+                   <p className="text-xs text-muted-foreground font-mono">Savings</p>
+                   <p className="text-sm font-bold text-primary">{(parseInt(metrics.savings) / 1024).toFixed(1)} KB</p>
+                 </div>
+               </div>
+               
+               {/* Compression Toggle */}
+               <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 mb-4">
+                 <div className="flex items-center gap-2">
+                   <Zap className="w-4 h-4 text-yellow-400" />
+                   <span className="text-sm font-mono">Enable Compression</span>
+                 </div>
+                 <input 
+                   type="checkbox" 
+                   checked={useCompression}
+                   onChange={(e) => setUseCompression(e.target.checked)}
+                   className="w-4 h-4 cursor-pointer"
+                 />
+               </div>
+               
+               {/* QR Code */}
+               {showQR && generatedLink && (
+                 <div className="flex justify-center mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                   <QRCode 
+                     value={generatedLink}
+                     size={180}
+                     level="H"
+                     includeMargin={true}
+                     bgColor="#000000"
+                     fgColor="#00FF00"
+                   />
+                 </div>
+               )}
+               
                <div className="flex items-center space-x-2 mt-4">
                  <div className="grid flex-1 gap-2">
                    <Label htmlFor="link" className="sr-only">

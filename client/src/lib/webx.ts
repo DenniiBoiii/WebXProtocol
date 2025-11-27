@@ -1,4 +1,5 @@
 import { z } from "zod";
+import pako from "pako";
 
 // --- Types ---
 
@@ -32,11 +33,18 @@ export type WebXBlueprint = z.infer<typeof WebXBlueprintSchema>;
 
 // --- Utilities ---
 
-export function encodeWebX(blueprint: WebXBlueprint): string {
+export function encodeWebX(blueprint: WebXBlueprint, compress: boolean = false): string {
   try {
-    const json = JSON.stringify(blueprint);
+    let data = JSON.stringify(blueprint);
+    
+    if (compress) {
+      // Compress with gzip
+      const compressed = pako.gzip(data);
+      data = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
+    }
+    
     // URL-safe base64 encoding
-    return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return btoa(data).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   } catch (e) {
     console.error("Failed to encode WebX blueprint", e);
     return "";
@@ -56,12 +64,53 @@ export function decodeWebX(payload: string): WebXBlueprint | null {
       base64 += '=';
     }
     
-    const json = atob(base64);
+    let json = atob(base64);
+    
+    // Try to decompress if it looks like gzip
+    try {
+      const binary = atob(json);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      json = pako.ungzip(bytes, { to: 'string' });
+    } catch {
+      // Not compressed, continue with uncompressed json
+    }
+    
     const parsed = JSON.parse(json);
     return WebXBlueprintSchema.parse(parsed);
   } catch (e) {
     console.error("Failed to decode WebX blueprint", e);
     return null;
+  }
+}
+
+export function getPayloadMetrics(blueprint: WebXBlueprint) {
+  const original = JSON.stringify(blueprint);
+  const originalSize = new Blob([original]).size;
+  
+  try {
+    const compressed = pako.gzip(original);
+    const compressedSize = compressed.length;
+    const base64Compressed = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
+    const base64CompressedSize = new Blob([base64Compressed]).size;
+    
+    return {
+      originalSize,
+      compressedSize,
+      base64CompressedSize,
+      compressionRatio: ((1 - base64CompressedSize / originalSize) * 100).toFixed(1),
+      savings: (originalSize - base64CompressedSize).toFixed(0)
+    };
+  } catch (e) {
+    return {
+      originalSize,
+      compressedSize: 0,
+      base64CompressedSize: 0,
+      compressionRatio: "0",
+      savings: "0"
+    };
   }
 }
 
