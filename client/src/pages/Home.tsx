@@ -1,18 +1,46 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
+  const [searchNexus, setSearchNexus] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("popular");
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const categories = useMemo(() => {
+    const cats = new Set(Object.values(SAMPLE_BLUEPRINTS).map(b => b.meta.category || "other"));
+    return ["all", ...Array.from(cats)];
+  }, []);
+
+  const filteredBlueprints = useMemo(() => {
+    let results = Object.entries(SAMPLE_BLUEPRINTS).filter(([_, bp]) => {
+      const matchesCategory = selectedCategory === "all" || bp.meta.category === selectedCategory;
+      const matchesSearch = searchNexus === "" || bp.title.toLowerCase().includes(searchNexus.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+
+    if (sortBy === "popular") {
+      results.sort((a, b) => (b[1].meta.downloads || 0) - (a[1].meta.downloads || 0));
+    } else if (sortBy === "recent") {
+      results.sort((a, b) => b[1].meta.created - a[1].meta.created);
+    }
+
+    return results;
+  }, [selectedCategory, searchNexus, sortBy]);
+
+  const featured = useMemo(() => {
+    return Object.entries(SAMPLE_BLUEPRINTS).find(([_, bp]) => bp.meta.featured);
+  }, []);
 
   const handleLoad = () => {
     if (!inputValue) return;
@@ -146,60 +174,151 @@ export default function Home() {
 
         {/* The Nexus: Webstore */}
         <div className="border-t border-white/10 pt-12 relative">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
               <div>
                   <div className="flex items-center gap-2 mb-2">
                       <Globe className="w-5 h-5 text-primary" />
                       <span className="text-xs font-mono uppercase tracking-widest text-primary">Decentralized Registry</span>
                   </div>
-                  <h2 className="text-3xl font-display font-bold text-white">The Nexus</h2>
-                  <p className="text-muted-foreground mt-2">Curated blueprints from the community.</p>
+                  <h2 className="text-4xl font-display font-bold text-white">The Nexus</h2>
+                  <p className="text-muted-foreground mt-2">Discover and share WebX blueprints.</p>
               </div>
               <Button 
                 variant="outline" 
-                className="border-white/10 hover:bg-white/5 gap-2"
+                className="border-white/10 hover:bg-white/5 gap-2 whitespace-nowrap"
                 onClick={() => toast({ title: "Access Denied", description: "You must be a verified builder to upload to The Nexus.", variant: "destructive" })}
               >
                   <Plus className="w-4 h-4" /> Upload Blueprint
               </Button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {Object.entries(SAMPLE_BLUEPRINTS).map(([key, blueprint], i) => (
-              <Link key={key} href={`/view?payload=${encodeWebX(blueprint)}`}>
-                <div className="group cursor-pointer h-full">
-                  <div className="bg-gradient-to-br from-white/10 to-transparent p-[1px] rounded-xl hover:from-primary hover:to-secondary transition-all duration-500 h-full">
-                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full relative overflow-hidden flex flex-col">
-                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
-                         <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-primary" />
+          {/* Featured Showcase */}
+          {featured && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-12"
+            >
+              <Link href={`/view?payload=${encodeWebX(featured[1])}`}>
+                <div className="group cursor-pointer">
+                  <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 to-secondary/20 p-8 hover:border-primary/60 transition-all duration-500">
+                    <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Flame className="w-4 h-4 text-red-400" />
+                        <span className="text-xs font-mono uppercase tracking-widest text-red-400">Featured This Week</span>
                       </div>
-                      
-                      <div className="mb-4 flex justify-between items-start">
-                          <Badge variant="outline" className="border-white/10 text-xs font-mono text-muted-foreground">
-                            {blueprint.layout.toUpperCase()}
-                          </Badge>
-                          {blueprint.meta.author === "WebX Foundation" && (
-                              <div className="flex items-center gap-1 text-[10px] text-primary font-mono border border-primary/20 px-2 py-0.5 rounded-full bg-primary/10">
-                                  <UserCheck className="w-3 h-3" /> VERIFIED
-                              </div>
-                          )}
-                      </div>
-
-                      <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">{blueprint.title}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
-                        {blueprint.data.find(b => b.type === 'paragraph')?.value || blueprint.data.find(b => b.type === 'heading')?.value || "View content..."}
+                      <h3 className="text-3xl font-display font-bold mb-3 group-hover:text-primary transition-colors">{featured[1].title}</h3>
+                      <p className="text-muted-foreground max-w-2xl mb-6 line-clamp-2">
+                        {featured[1].data.find(b => b.type === 'paragraph')?.value || "Explore this blueprint..."}
                       </p>
-                      
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
-                          <span className="w-2 h-2 rounded-full bg-white/20 group-hover:bg-primary transition-colors" />
-                          {blueprint.meta.author || "Anonymous"}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground font-mono">
+                          <span>{featured[1].meta.downloads || 0} downloads</span>
+                          <span>•</span>
+                          <span>{featured[1].meta.author || "Anonymous"}</span>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform" />
                       </div>
                     </div>
                   </div>
                 </div>
               </Link>
+            </motion.div>
+          )}
+
+          {/* Search & Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-8 items-start md:items-center md:justify-between">
+            <div className="relative flex-1 max-w-sm">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Input 
+                placeholder="Search blueprints..." 
+                className="pl-10 bg-white/5 border-white/10 focus:border-primary"
+                value={searchNexus}
+                onChange={(e) => setSearchNexus(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-2 flex-wrap">
+              <select 
+                value={sortBy} 
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-foreground hover:bg-white/10 transition-colors cursor-pointer font-mono"
+              >
+                <option value="popular">Most Popular</option>
+                <option value="recent">Most Recent</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Category Navigation */}
+          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 text-sm font-mono uppercase tracking-wider rounded-lg transition-all whitespace-nowrap ${
+                  selectedCategory === cat
+                    ? "bg-primary text-white border border-primary"
+                    : "bg-white/5 text-muted-foreground border border-white/10 hover:bg-white/10"
+                }`}
+              >
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </button>
             ))}
           </div>
+
+          {/* Grid */}
+          {filteredBlueprints.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-6">
+              {filteredBlueprints.map(([key, blueprint]) => (
+                <Link key={key} href={`/view?payload=${encodeWebX(blueprint)}`}>
+                  <div className="group cursor-pointer h-full">
+                    <div className="bg-gradient-to-br from-white/10 to-transparent p-[1px] rounded-xl hover:from-primary hover:to-secondary transition-all duration-500 h-full">
+                      <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full relative overflow-hidden flex flex-col">
+                        <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                           <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-primary" />
+                        </div>
+                        
+                        <div className="mb-4 flex justify-between items-start gap-2">
+                            <Badge variant="outline" className="border-white/10 text-xs font-mono text-muted-foreground">
+                              {blueprint.meta.category?.toUpperCase() || "OTHER"}
+                            </Badge>
+                            {blueprint.meta.author === "WebX Foundation" && (
+                                <div className="flex items-center gap-1 text-[10px] text-primary font-mono border border-primary/20 px-2 py-0.5 rounded-full bg-primary/10 whitespace-nowrap">
+                                    <UserCheck className="w-3 h-3" /> VERIFIED
+                                </div>
+                            )}
+                        </div>
+
+                        <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">{blueprint.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+                          {blueprint.data.find(b => b.type === 'paragraph')?.value || blueprint.data.find(b => b.type === 'heading')?.value || "View content..."}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
+                            <span className="truncate">{blueprint.meta.author || "Anonymous"}</span>
+                            {blueprint.meta.downloads && (
+                              <span className="flex items-center gap-1 text-primary/70">
+                                <TrendingUp className="w-3 h-3" /> {blueprint.meta.downloads}
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No blueprints found matching your search.</p>
+            </div>
+          )}
         </div>
       </div>
       

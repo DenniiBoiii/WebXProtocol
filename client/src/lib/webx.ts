@@ -22,6 +22,9 @@ export const WebXBlueprintSchema = z.object({
     version: z.string(),
     author: z.string().optional(),
     created: z.number(),
+    category: z.string().optional(),
+    featured: z.boolean().optional(),
+    downloads: z.number().optional(),
   }),
 });
 
@@ -92,7 +95,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   welcome: {
     title: "Welcome to WebX",
     layout: "article",
-    meta: { version: "1.0", author: "WebX Protocol", created: Date.now() },
+    meta: { version: "1.0", author: "WebX Protocol", created: Date.now(), category: "documentation", featured: true, downloads: 2400 },
     data: [
       { type: "heading", value: "The Future of Hyperlinks" },
       { type: "paragraph", value: "WebX isn't just a link; it's a blueprint. This entire page was rendered client-side from a JSON payload embedded in the URL." },
@@ -104,7 +107,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   portfolio_template: {
     title: "Alex Chen // Design Engineer",
     layout: "minimal",
-    meta: { version: "1.0", author: "Alex", created: Date.now() },
+    meta: { version: "1.0", author: "Alex", created: Date.now(), category: "template", downloads: 1840 },
     data: [
         { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200", alt: "Profile" } },
         { type: "heading", value: "Building the future of interfaces." },
@@ -117,7 +120,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   event_invite: {
       title: "Neon Nights 2025",
       layout: "card",
-      meta: { version: "1.0", author: "EventOrg", created: Date.now() },
+      meta: { version: "1.0", author: "EventOrg", created: Date.now(), category: "event", downloads: 642 },
       data: [
           { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1000", alt: "Event" } },
           { type: "heading", value: "Neon Nights: The Underground" },
@@ -129,7 +132,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   ai_demo: {
     title: "AI Story Generator",
     layout: "article",
-    meta: { version: "1.0", author: "AI Bot", created: Date.now() },
+    meta: { version: "1.0", author: "AI Bot", created: Date.now(), category: "interactive", featured: true, downloads: 3200 },
     ai: { prompt: "Write a short sci-fi story about a robot discovering a flower in a wasteland.", auto_generate: true },
     data: [
       { type: "heading", value: "A New Beginning" },
@@ -139,7 +142,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   whitepaper: {
       title: "WebX Protocol Specification",
       layout: "article",
-      meta: { version: "1.0", author: "WebX Foundation", created: Date.now() },
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "documentation", downloads: 5100 },
       data: [
           { type: "heading", value: "Abstract" },
           { type: "paragraph", value: "WebX is a serverless, payload-based web protocol designed to decentralized content distribution. Unlike HTTP, which points to a resource on a server, a WebX link carries the entire blueprint of the page within the URL itself." },
