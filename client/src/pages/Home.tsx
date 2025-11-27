@@ -90,7 +90,7 @@ export default function Home() {
               PROTOCOL V1.0 ONLINE
             </span>
             <h1 className="text-6xl md:text-8xl font-display font-bold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/50 text-glow">
-              WebX Protocol
+              WebX
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               The serverless web. Hyperlinks that carry their own blueprints. 
