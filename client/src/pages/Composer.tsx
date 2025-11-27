@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -52,6 +52,48 @@ export default function Composer() {
   const [expireOnFirstView, setExpireOnFirstView] = useState(false);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+
+  const handleDownloadWebX = () => {
+    const dataStr = JSON.stringify(blueprint, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${blueprint.title.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.webx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast({
+      title: "Downloaded",
+      description: `Saved as ${blueprint.title}.webx`
+    });
+  };
+
+  const handleImportWebX = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const importedBlueprint = JSON.parse(content) as WebXBlueprint;
+        setBlueprint(importedBlueprint);
+        toast({
+          title: "Imported",
+          description: `Loaded blueprint: ${importedBlueprint.title}`
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to parse .webx file. Make sure it's valid JSON.",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
   
   const metrics = getPayloadMetrics(blueprint);
 
@@ -180,6 +222,22 @@ export default function Composer() {
           <h1 className="font-display font-bold text-lg">WebX Composer</h1>
         </div>
         <div className="flex gap-2">
+           <label className="cursor-pointer">
+             <input 
+               type="file" 
+               accept=".webx,.json"
+               onChange={handleImportWebX}
+               className="hidden"
+             />
+             <Button size="sm" variant="outline" asChild>
+               <span>
+                 <Upload className="w-4 h-4 mr-2" /> Import .webx
+               </span>
+             </Button>
+           </label>
+           <Button size="sm" variant="outline" onClick={handleDownloadWebX} className="gap-2">
+             <Download className="w-4 h-4" /> Download .webx
+           </Button>
            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
              <DialogTrigger asChild>
                <Button size="sm" onClick={handleGenerate} className="bg-primary hover:bg-primary/90 text-white">
