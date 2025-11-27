@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Composer from "@/pages/Composer";
 import Viewer from "@/pages/Viewer";
+import Implement from "@/pages/Implement";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/composer" component={Composer} />
       <Route path="/view" component={Viewer} />
+      <Route path="/implement" component={Implement} />
       <Route component={NotFound} />
     </Switch>
   );

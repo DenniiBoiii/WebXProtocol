@@ -123,7 +123,7 @@ export default function Home() {
             </Button>
           </motion.div>
 
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex justify-center gap-4 flex-wrap">
              <Link href="/composer">
                 <Button variant="outline" className="border-white/10 hover:bg-white/5">
                    <Code className="mr-2 w-4 h-4" /> Open Composer
@@ -132,6 +132,11 @@ export default function Home() {
              <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.whitepaper)}`}>
                 <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
                    Read the Whitepaper
+                </Button>
+             </Link>
+             <Link href="/implement">
+                <Button variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20">
+                   How to Implement WebX
                 </Button>
              </Link>
           </div>
