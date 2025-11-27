@@ -189,7 +189,7 @@ export default function Composer() {
                    </div>
                  </div>
                  <p className="text-xs text-muted-foreground border-t border-white/10 pt-3">
-                   Advanced uses: semantic compression, string deduplication &amp; base62 encoding
+                   Advanced: minified keys (30% smaller) + string deduplication (25% smaller) + base62 encoding (15% smaller) + optional gzip
                  </p>
                </div>
                

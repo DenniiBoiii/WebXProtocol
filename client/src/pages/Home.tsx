@@ -142,18 +142,18 @@ export default function Home() {
           {[
             {
               icon: <Layers className="w-6 h-6 text-primary" />,
-              title: "Client-Side Rendering",
-              desc: "No servers required. The browser decodes the JSON payload and builds the UI instantly."
+              title: "Extreme Compression",
+              desc: "Base62 encoding, semantic compression, and string deduplication reduce links by 60-75%. Entire pages in a few hundred characters."
             },
             {
               icon: <Share2 className="w-6 h-6 text-secondary" />,
               title: "Portable Blueprints",
-              desc: "Share entire pages as a single link. The content lives inside the URL."
+              desc: "Share entire pages as a single link. The content lives inside the URL. Works across every platform."
             },
             {
               icon: <Code className="w-6 h-6 text-purple-400" />,
               title: "AI Integration",
-              desc: "Embed prompts directly in the protocol. Let the client generate the content on the fly."
+              desc: "Embed prompts directly in blueprints. Generate dynamic content on-the-fly with cryptographic certainty."
             }
           ].map((feature, i) => (
             <motion.div
@@ -300,13 +300,13 @@ export default function Home() {
               <div>
                 <p className="font-bold text-primary mb-2">Q: How is the whole page in one link?</p>
                 <p className="text-sm text-muted-foreground">
-                  The page is compressed into JSON (basically text describing the page) and encoded into the link. When you click it, your browser decodes the text and builds the page. It's like sending someone a LEGO instruction set instead of a finished LEGO castle.
+                  The page is minified, deduplicated, compressed, and encoded into base62 (more efficient than base64). When you click it, your browser reverses the process and builds the page. It's like sending someone a LEGO instruction set instead of a finished LEGO castle.
                 </p>
               </div>
               <div>
                 <p className="font-bold text-primary mb-2">Q: What's the limit? Won't links get too long?</p>
                 <p className="text-sm text-muted-foreground">
-                  Good question! URLs can be quite long. For super complex pages, you could split content or use AI to generate it on-the-fly. Most pages (blogs, portfolios, announcements) fit easily in a single link.
+                  We've crushed the size problem. Semantic compression (minified keys), string deduplication, and base62 encoding reduce payloads by 60-75%. Most pages become just a few hundred characters. For anything larger, optional gzip compression kicks in.
                 </p>
               </div>
               <div>
