@@ -170,7 +170,7 @@ export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 
 export const WebXBlueprintSchema = z.object({
   title: z.string(),
-  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal"]),
+  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal", "bank"]),
   data: z.array(ContentBlockSchema),
   ai: z.object({
     prompt: z.string(),
@@ -418,7 +418,7 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
   },
   bank_dashboard: {
       title: "SecureBank - Internet Banking Portal",
-      layout: "article",
+      layout: "bank",
       meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "showcase", featured: true, downloads: 3180 },
       data: [
           { type: "heading", value: "SecureBank Internet Banking" },

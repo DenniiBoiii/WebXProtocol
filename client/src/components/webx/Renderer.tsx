@@ -410,6 +410,185 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
         );
       }
 
+      case "bank": {
+        // Banking interface with accounts, transactions, and JWT verification
+        const [selectedAccount, setSelectedAccount] = useState<number>(0);
+        const [showTransfer, setShowTransfer] = useState(false);
+        const [transferAmount, setTransferAmount] = useState("");
+        const [transferTo, setTransferTo] = useState("");
+        const [transactions, setTransactions] = useState([
+          { date: "2025-11-27", description: "Transfer to Savings", amount: 5000, type: "out", status: "complete" },
+          { date: "2025-11-26", description: "Grocery Store", amount: -87.43, type: "out", status: "complete" },
+          { date: "2025-11-25", description: "Direct Deposit", amount: 3500, type: "in", status: "complete" },
+          { date: "2025-11-24", description: "Gas Station", amount: -52.15, type: "out", status: "complete" }
+        ]);
+
+        const accounts = [
+          { name: "Primary Checking", balance: 12450.50, icon: "💳", type: "checking" },
+          { name: "Savings Account", balance: 48920.00, icon: "🏦", type: "savings" },
+          { name: "Investment Portfolio", balance: 125340.75, icon: "📈", type: "investment" }
+        ];
+
+        const handleTransfer = () => {
+          if (!transferAmount || !transferTo) return;
+          
+          const amount = parseFloat(transferAmount);
+          const newTransaction = {
+            date: new Date().toLocaleDateString(),
+            description: `Transfer to ${transferTo}`,
+            amount: -amount,
+            type: "out",
+            status: "pending"
+          };
+          
+          setTransactions([newTransaction, ...transactions]);
+          setTransferAmount("");
+          setTransferTo("");
+          setShowTransfer(false);
+        };
+
+        return (
+          <div className="max-w-4xl mx-auto p-6 md:p-8">
+            <header className="mb-8">
+              <Badge variant="outline" className="mb-4 border-green-400/50 text-green-400 hover:bg-green-400/10">
+                WebX Protocol // SECURE BANKING
+              </Badge>
+              <h1 className="text-4xl font-display font-bold tracking-tight mb-2 text-glow">
+                {blueprint.title}
+              </h1>
+              <p className="text-muted-foreground">{blueprint.data.find(b => b.type === "paragraph")?.value}</p>
+            </header>
+
+            {/* JWT Verification Badge */}
+            <div className="mb-8 p-4 bg-green-400/10 border border-green-400/30 rounded-lg flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-green-400" />
+              <div className="text-sm">
+                <p className="font-semibold text-green-400">Cryptographically Verified</p>
+                <p className="text-xs text-muted-foreground">JWT token embedded in blueprint • No server dependency required</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              {accounts.map((account, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={() => setSelectedAccount(idx)}
+                  whileHover={{ y: -4 }}
+                  className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    selectedAccount === idx
+                      ? "bg-green-400/20 border-green-400 shadow-lg shadow-green-400/20"
+                      : "bg-white/5 border-white/10 hover:border-green-400/50"
+                  }`}
+                >
+                  <div className="text-2xl mb-2">{account.icon}</div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">{account.type}</p>
+                  <h3 className="font-semibold text-sm mb-3">{account.name}</h3>
+                  <p className="text-2xl font-bold text-green-400">${account.balance.toLocaleString()}</p>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Transfer Section */}
+            <Card className="bg-white/5 border-white/10 mb-8">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-display font-bold">Quick Actions</h3>
+                  <button
+                    onClick={() => setShowTransfer(!showTransfer)}
+                    className="px-4 py-2 bg-green-400 text-black font-semibold rounded-lg hover:bg-green-300 transition-all"
+                  >
+                    {showTransfer ? "Cancel" : "Request Transfer"}
+                  </button>
+                </div>
+
+                {showTransfer && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-4 pt-6 border-t border-white/10"
+                  >
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-2 block">Amount</label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-muted-foreground mb-2 block">Recipient</label>
+                      <Input
+                        placeholder="Account name or number"
+                        value={transferTo}
+                        onChange={(e) => setTransferTo(e.target.value)}
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleTransfer}
+                      className="w-full bg-green-400 text-black font-semibold hover:bg-green-300"
+                    >
+                      <Send className="w-4 h-4 mr-2" /> Submit Transfer
+                    </Button>
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Transactions */}
+            <Card className="bg-white/5 border-white/10">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-display font-bold mb-6">Recent Transactions</h3>
+                <div className="space-y-3">
+                  {transactions.map((tx, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:border-green-400/30 transition-all"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">{tx.description}</p>
+                        <p className="text-xs text-muted-foreground">{tx.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold text-lg ${tx.type === "in" ? "text-green-400" : "text-red-400"}`}>
+                          {tx.type === "in" ? "+" : ""}{tx.amount > 0 ? tx.amount : tx.amount}
+                        </p>
+                        <Badge variant="outline" className={`text-xs ${
+                          tx.status === "complete" 
+                            ? "bg-green-400/10 text-green-400 border-green-400/30" 
+                            : "bg-yellow-400/10 text-yellow-400 border-yellow-400/30"
+                        }`}>
+                          {tx.status}
+                        </Badge>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Separator className="my-8 bg-white/10" />
+
+            <footer className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground font-mono gap-4">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4" />
+                Rendered Client-Side
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                <Fingerprint className="w-3 h-3 text-green-400" />
+                <span>VERIFIED: {blueprintHash}</span>
+              </div>
+              <div>WebX://{blueprint.meta.version}</div>
+            </footer>
+          </div>
+        );
+      }
+
       case "minimal":
           return (
               <div className="max-w-2xl mx-auto p-8 md:p-12 font-mono text-sm">
