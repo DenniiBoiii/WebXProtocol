@@ -856,93 +856,102 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
               initial={{ opacity: 0, rotateX: -15, y: 40 }}
               animate={{ opacity: 1, rotateX: 0, y: 0 }}
               transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
-              className="w-full max-w-3xl perspective"
+              className="w-full max-w-5xl perspective"
               style={{
                 perspective: "1000px",
               }}
             >
               {/* Vintage Postcard */}
-              <div className="relative" style={{ aspectRatio: "7/5" }}>
+              <div className="relative" style={{ aspectRatio: "6/4" }}>
                 {/* Main postcard card */}
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 rounded-sm border-2 border-amber-800/30 shadow-2xl overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 rounded-sm border border-amber-800/30 shadow-2xl overflow-hidden group flex">
                   {/* Aged paper texture */}
-                  <div className="absolute inset-0 opacity-30 mix-blend-multiply"
+                  <div className="absolute inset-0 opacity-20 mix-blend-multiply"
                        style={{
                          backgroundImage: "url('data:image/svg+xml,%3Csvg width=%22100%22 height=%22100%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%223%22 /%3E%3C/filter%3E%3Crect width=%22100%22 height=%22100%22 filter=%22url(%23noise)%22 opacity=%220.5%22/%3E%3C/svg%3E')",
                          backgroundSize: "200px 200px"
                        }}
                   />
                   
-                  {/* Postcard content grid */}
-                  <div className="h-full grid grid-cols-3 gap-0 p-8 relative z-10">
-                    {/* Left side - Image/Visual */}
-                    <div className="col-span-2 flex flex-col justify-between">
-                      {/* Postcard title/image area */}
-                      <div className="bg-gradient-to-br from-blue-200/40 to-purple-200/40 rounded border border-amber-800/20 p-6 flex items-center justify-center min-h-48">
-                        <div className="text-center">
-                          <h1 className="text-3xl font-display font-bold text-amber-900 mb-2">
-                            {blueprint.title}
-                          </h1>
-                          <p className="text-sm text-amber-800/70 font-serif italic">A WebX Postcard</p>
-                        </div>
-                      </div>
-
-                      {/* Message content */}
-                      <div className="text-amber-900/80 text-sm leading-relaxed space-y-3 mt-4">
-                        {blueprint.data.map((block, idx) => (
-                          <div key={idx} className="font-serif">
-                            {block.type === "paragraph" && <p>{block.value}</p>}
-                            {block.type === "heading" && <h2 className="font-bold text-base">{block.value}</h2>}
-                          </div>
-                        ))}
+                  <div className="relative z-10 w-full h-full flex">
+                    {/* LEFT SIDE - Message Area (2/3) */}
+                    <div className="w-2/3 p-8 flex flex-col justify-start">
+                      {/* Postcard label */}
+                      <p className="text-xs font-mono text-amber-900/50 tracking-widest mb-6">POSTCARD</p>
+                      
+                      {/* Message lines/content */}
+                      <div className="space-y-4 flex-1">
+                        {blueprint.data.length > 0 ? (
+                          blueprint.data.map((block, idx) => (
+                            <div key={idx} className="space-y-1">
+                              {block.type === "heading" && (
+                                <div>
+                                  <p className="font-serif font-bold text-amber-900 text-sm mb-2">{block.value}</p>
+                                  <div className="border-b border-dotted border-amber-800/30" />
+                                </div>
+                              )}
+                              {block.type === "paragraph" && (
+                                <div className="relative">
+                                  <p className="font-serif text-amber-900/80 text-xs leading-relaxed mb-3">{block.value}</p>
+                                  <div className="border-b border-dotted border-amber-800/30" />
+                                </div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {/* Right side - Address/Postmark area */}
-                    <div className="col-span-1 flex flex-col justify-between relative">
-                      {/* Postage stamp */}
-                      <div className="absolute top-4 right-4">
-                        <motion.div
-                          animate={{ rotate: [-2, 2, -2] }}
-                          transition={{ duration: 4, repeat: Infinity }}
-                          className="w-16 h-20 bg-gradient-to-br from-red-400 to-red-600 border-2 border-dashed border-red-800 rounded-sm flex items-center justify-center shadow-md"
-                        >
-                          <span className="text-2xl">✉️</span>
-                        </motion.div>
-                      </div>
+                    {/* CENTER DIVIDER LINE */}
+                    <div className="w-px bg-amber-800/40" />
 
-                      {/* Postmark circle */}
-                      <div className="absolute top-8 right-24 text-red-800/40">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 20, repeat: Infinity, linear: true }}
-                          className="text-6xl font-bold opacity-30"
-                        >
-                          ⊙
-                        </motion.div>
-                      </div>
+                    {/* RIGHT SIDE - Address Area (1/3) */}
+                    <div className="w-1/3 p-8 flex flex-col justify-between relative">
+                      {/* Postage Stamp */}
+                      <motion.div
+                        animate={{ rotate: [-3, 3, -3] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="absolute top-4 right-4 w-14 h-16 bg-gradient-to-br from-red-300 to-red-500 border-2 border-dashed border-red-700 rounded-sm flex items-center justify-center shadow-md"
+                      >
+                        <span className="text-xl">✉️</span>
+                      </motion.div>
 
-                      {/* Address section */}
-                      <div className="space-y-3 mt-12">
-                        <p className="text-xs font-serif text-amber-900/60 uppercase tracking-wider">From:</p>
-                        <div className="border-b border-amber-800/30 pb-2">
-                          <p className="font-serif font-semibold text-amber-900">{blueprint.meta.author}</p>
-                          <p className="text-xs text-amber-800/60 font-serif">{new Date(blueprint.meta.created).toLocaleDateString()}</p>
+                      {/* Address Fields */}
+                      <div className="space-y-6 mt-8">
+                        {/* To: */}
+                        <div>
+                          <p className="text-xs font-serif text-amber-900/60 mb-1 tracking-wide">to:</p>
+                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6" />
+                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6" />
                         </div>
 
-                        {/* Postcard text at bottom */}
-                        <p className="text-center text-xs font-mono text-amber-800/40 mt-4 pt-2 border-t border-amber-800/20">
-                          POSTCARD
-                        </p>
+                        {/* From: */}
+                        <div>
+                          <p className="text-xs font-serif text-amber-900/60 mb-1 tracking-wide">from:</p>
+                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
+                            <p className="font-serif text-amber-900 text-xs">{blueprint.meta.author}</p>
+                          </div>
+                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
+                            <p className="font-serif text-amber-800/60 text-xs">{new Date(blueprint.meta.created).toLocaleDateString()}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Vintage corner marks */}
-                  <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-amber-800/30" />
-                  <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-amber-800/30" />
-                  <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-amber-800/30" />
-                  <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-amber-800/30" />
+                  <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-amber-800/25" />
+                  <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-amber-800/25" />
+                  <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-amber-800/25" />
+                  <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-amber-800/25" />
                 </div>
               </div>
 
