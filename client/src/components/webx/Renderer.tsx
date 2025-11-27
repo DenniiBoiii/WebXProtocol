@@ -159,6 +159,85 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
           </div>
         );
       
+      case "newsfeed":
+        // Parse posts from dividers - each post is a heading, content, and metrics
+        const posts: { author: string; content: string; metrics: string }[] = [];
+        let currentPost = { author: "", content: "", metrics: "" };
+        
+        blueprint.data.forEach((block) => {
+          if (block.type === "divider") {
+            if (currentPost.author) {
+              posts.push(currentPost);
+              currentPost = { author: "", content: "", metrics: "" };
+            }
+          } else if (block.type === "heading" && block.value?.includes("Post by")) {
+            currentPost.author = block.value.replace("Post by ", "");
+          } else if (block.type === "paragraph" && !currentPost.content) {
+            currentPost.content = block.value || "";
+          } else if (block.type === "list" && !currentPost.metrics) {
+            currentPost.metrics = block.value || "";
+          }
+        });
+        if (currentPost.author) posts.push(currentPost);
+
+        return (
+          <div className="max-w-2xl mx-auto p-6 md:p-8">
+            <header className="mb-8 text-center">
+              <Badge variant="outline" className="mb-4 border-secondary/50 text-secondary hover:bg-secondary/10">
+                WebX Protocol // NEWSFEED
+              </Badge>
+              <h1 className="text-4xl font-display font-bold tracking-tight mb-3 text-glow">
+                {blueprint.title}
+              </h1>
+              <p className="text-muted-foreground">{blueprint.data.find(b => b.type === "paragraph")?.value}</p>
+            </header>
+
+            <Separator className="my-8 bg-white/10" />
+
+            <div className="space-y-4">
+              {posts.map((post, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                >
+                  <Card className="bg-white/5 border-white/10 hover:border-secondary/30 transition-all hover:shadow-lg hover:shadow-secondary/10">
+                    <CardContent className="p-6">
+                      <div className="mb-4 pb-4 border-b border-white/10">
+                        <h3 className="font-display font-bold text-lg text-secondary">{post.author}</h3>
+                      </div>
+                      <p className="text-foreground mb-6 leading-relaxed text-base">{post.content}</p>
+                      <div className="flex gap-6 text-sm text-muted-foreground font-mono">
+                        {post.metrics.split(",").map((metric, i) => (
+                          <div key={i} className="flex items-center gap-2 hover:text-secondary transition-colors cursor-pointer">
+                            <span className="text-primary/60">{metric.trim()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            <Separator className="my-8 bg-white/10" />
+
+            <footer className="flex flex-col md:flex-row justify-between items-center text-xs text-muted-foreground font-mono gap-4">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4" />
+                Rendered Client-Side
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                <Fingerprint className="w-3 h-3 text-secondary" />
+                <span>HASH: {blueprintHash}</span>
+              </div>
+              <div>WebX://{blueprint.meta.version}</div>
+            </footer>
+          </div>
+        );
+
       case "minimal":
           return (
               <div className="max-w-2xl mx-auto p-8 md:p-12 font-mono text-sm">
