@@ -394,6 +394,51 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
           { type: "button", value: "Start Building", props: { variant: "primary" } }
       ]
   },
+  social_media_feed: {
+      title: "NexusNet - Decentralized Social Feed",
+      layout: "newsfeed",
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "showcase", featured: true, downloads: 4200 },
+      data: [
+          { type: "heading", value: "NexusNet Social Feed" },
+          { type: "paragraph", value: "A fully functional social media platform on a single WebX link. No servers. No database. Pure client-side." },
+          { type: "divider" },
+          { type: "heading", value: "Post by Alex Chen" },
+          { type: "paragraph", value: "Just shipped v2 of WebX protocol. The entire frontend compressed into a URL. Mind blown 🚀" },
+          { type: "list", value: "❤️ 2,340 likes,💬 456 replies,🔗 892 shares" },
+          { type: "divider" },
+          { type: "heading", value: "Post by Jordan Lee" },
+          { type: "paragraph", value: "Using WebX to build the future of decentralized apps. No more hosting bills, no more downtime. Just pure protocol." },
+          { type: "list", value: "❤️ 1,890 likes,💬 234 replies,🔗 567 shares" },
+          { type: "divider" },
+          { type: "heading", value: "Post by Sam Rivera" },
+          { type: "paragraph", value: "WebX just changed everything. I literally sent my entire portfolio to 100 people in one link. The web is never going back." },
+          { type: "list", value: "❤️ 5,672 likes,💬 1,203 replies,🔗 2,341 shares" },
+          { type: "button", value: "Create Your Own Feed", props: { variant: "primary" } }
+      ]
+  },
+  bank_dashboard: {
+      title: "SecureBank - Internet Banking Portal",
+      layout: "article",
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "showcase", featured: true, downloads: 3180 },
+      data: [
+          { type: "heading", value: "SecureBank Internet Banking" },
+          { type: "paragraph", value: "Enterprise-grade banking portal delivered via a single WebX link with embedded JWT authentication and encrypted account data." },
+          { type: "divider" },
+          { type: "heading", value: "Account Summary" },
+          { type: "list", value: "Primary Checking: $12,450.50,Savings Account: $48,920.00,Investment Portfolio: $125,340.75" },
+          { type: "divider" },
+          { type: "heading", value: "Recent Transactions" },
+          { type: "list", value: "2025-11-27: Transfer to Savings +$5,000.00,2025-11-26: Grocery Store -$87.43,2025-11-25: Direct Deposit +$3,500.00,2025-11-24: Gas Station -$52.15" },
+          { type: "divider" },
+          { type: "heading", value: "Security" },
+          { type: "paragraph", value: "This portal uses embedded JWT tokens for authentication. Your identity is cryptographically verified. No session cookies. No server trust required." },
+          { type: "list", value: "🔒 Token-based authentication,🔐 End-to-end encryption,✓ Content verified with hash,🛡️ Instant revocation support" },
+          { type: "divider" },
+          { type: "heading", value: "Why WebX for Banking?" },
+          { type: "list", value: "No central server to hack,Offline-capable verification,Customer-controlled shares,Instant access anywhere" },
+          { type: "button", value: "Request Wire Transfer", props: { variant: "primary" } }
+      ]
+  },
   security_guide: {
       title: "WebX + JWT: The Sovereign Internet",
       layout: "article",

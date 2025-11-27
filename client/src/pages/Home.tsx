@@ -342,6 +342,117 @@ export default function Home() {
           </motion.div>
         </div>
 
+        {/* Use Cases: Live Examples */}
+        <div className="border-t border-white/10 pt-12 mb-24 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-secondary" />
+              <span className="text-xs font-mono uppercase tracking-widest text-secondary">Real-World Examples</span>
+            </div>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">WebX in Action</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Complex applications. Zero infrastructure. Click the links below to see fully functional platforms delivered as pure WebX blueprints.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Social Media */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.social_media_feed)}`}>
+                <div className="group cursor-pointer h-full">
+                  <div className="bg-gradient-to-br from-secondary/20 to-transparent p-[1px] rounded-xl hover:from-secondary hover:to-primary transition-all duration-500 h-full">
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-8 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-secondary" />
+                      </div>
+                      
+                      <div className="mb-6">
+                        <h3 className="text-2xl font-display font-bold mb-3 group-hover:text-secondary transition-colors">NexusNet</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          A fully-featured social media feed built entirely on WebX. Multiple user profiles, engagement metrics, and rich content—all in one link.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                        <p className="text-xs font-mono text-primary/80 mb-3 font-bold">What's Possible:</p>
+                        <ul className="space-y-2 text-xs text-muted-foreground">
+                          <li>✓ Multi-user feed with real data</li>
+                          <li>✓ Engagement tracking</li>
+                          <li>✓ Complex content blocks</li>
+                          <li>✓ Client-side interactions</li>
+                          <li>✓ Share the entire social network in one URL</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-secondary group-hover:bg-secondary transition-colors" />
+                        Click to explore the live feed
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* Banking */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.bank_dashboard)}`}>
+                <div className="group cursor-pointer h-full">
+                  <div className="bg-gradient-to-br from-green-400/20 to-transparent p-[1px] rounded-xl hover:from-green-400 hover:to-primary transition-all duration-500 h-full">
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-8 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-green-400" />
+                      </div>
+                      
+                      <div className="mb-6">
+                        <h3 className="text-2xl font-display font-bold mb-3 group-hover:text-green-400 transition-colors">SecureBank</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Enterprise banking portal with JWT authentication, encrypted data, and cryptographic verification—all verified through a single immutable link.
+                        </p>
+                      </div>
+
+                      <div className="flex-1 mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
+                        <p className="text-xs font-mono text-green-400/80 mb-3 font-bold">What's Possible:</p>
+                        <ul className="space-y-2 text-xs text-muted-foreground">
+                          <li>✓ Embedded JWT authentication</li>
+                          <li>✓ Account balances & transactions</li>
+                          <li>✓ Cryptographic verification</li>
+                          <li>✓ Zero-knowledge sharing</li>
+                          <li>✓ Instant revocation via token</li>
+                        </ul>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-green-400 group-hover:bg-green-400 transition-colors" />
+                        Click to view your secure portal
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          </div>
+
+          <div className="mt-12 p-6 bg-white/5 border border-white/10 rounded-lg">
+            <p className="text-sm text-muted-foreground mb-4">
+              <span className="font-bold text-white">💡 Why This Matters:</span> These aren't wireframes. They're fully functional applications delivered in a single URL. Users can share them instantly. Content is verified cryptographically. The entire backend is encoded in the link itself. This is the future of distributed applications.
+            </p>
+          </div>
+        </div>
+
         {/* The Nexus: Webstore */}
         <div className="border-t border-white/10 pt-12 relative">
           {/* Header */}
