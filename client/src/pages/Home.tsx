@@ -296,7 +296,7 @@ export default function Home() {
             className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-8"
           >
             <h3 className="text-2xl font-display font-bold mb-8">Quick Questions</h3>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
               <div>
                 <p className="font-bold text-primary mb-2">Q: How is the whole page in one link?</p>
                 <p className="text-sm text-muted-foreground">
@@ -316,10 +316,27 @@ export default function Home() {
                 </p>
               </div>
               <div>
-                <p className="font-bold text-primary mb-2">Q: What about passwords and security?</p>
+                <p className="font-bold text-primary mb-2">Q: What about authentication?</p>
                 <p className="text-sm text-muted-foreground">
-                  WebX is for public content (like regular websites). For secure stuff, you still need servers. Think of WebX as replacing basic web hosting, not authentication systems.
+                  Great question. WebX supports cryptographic authentication via JWTs embedded in blueprints. This enables gated content, role-based access, and temporary shares—with minimal server dependency. Read the full case study below.
                 </p>
+              </div>
+            </div>
+            
+            <div className="border-t border-white/10 pt-6">
+              <div className="bg-primary/5 border border-primary/30 rounded-lg p-6 flex items-start gap-4">
+                <div className="text-primary text-2xl min-w-fit">🔐</div>
+                <div>
+                  <p className="font-bold text-white mb-2">WebX Can Do Authentication</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    We initially said WebX is for public content. That's not the whole story. Using JWT tokens, WebX can deliver gated, authenticated content with cryptographic verification—no constant server calls required.
+                  </p>
+                  <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.security_guide)}`}>
+                    <Button className="text-xs h-8 gap-2">
+                      Read: Building the Sovereign Internet <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>
