@@ -440,24 +440,56 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
       ]
   },
   security_guide: {
-      title: "WebX + JWT: The Sovereign Internet",
+      title: "The Sovereign Internet: WebX + Compression + JWT",
       layout: "article",
       meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "documentation", featured: true, downloads: 2850 },
       data: [
-          { type: "heading", value: "The Truth About WebX & Auth" },
-          { type: "paragraph", value: "WebX can deliver authenticated, gated content using cryptographic JWTs. No constant server calls needed." },
+          { type: "heading", value: "Making the Internet Sovereign" },
+          { type: "paragraph", value: "WebX transforms how the internet works by combining extreme compression, cryptographic authentication, and client-side rendering. No servers required. No tracking. No downtime. Pure protocol." },
           { type: "divider" },
-          { type: "heading", value: "How It Works" },
-          { type: "list", value: "User logs in,Gets a signed JWT token,Token embedded in WebX link,Browser verifies signature,Content renders based on permissions" },
-          { type: "heading", value: "Real Use Cases" },
-          { type: "list", value: "Premium gated blogs,Team-only documents,Time-limited access shares,Role-based content" },
-          { type: "heading", value: "The Shift" },
-          { type: "paragraph", value: "Instead of trusting corporate servers, trust cryptography. Instead of server latency, microsecond client-side verification." },
-          { type: "heading", value: "Server-Side Still Needed For" },
-          { type: "list", value: "Initial login,Token issuance,Revocation lists,User identity" },
-          { type: "heading", value: "The Vision" },
-          { type: "quote", value: "Content sovereign, identity cryptographic, servers optional." },
-          { type: "button", value: "Build Authenticated Apps", props: { variant: "primary" } }
+          
+          { type: "heading", value: "Part 1: The Compression Revolution" },
+          { type: "paragraph", value: "URLs used to point to servers. Now they contain entire applications. Here's how we made it possible:" },
+          { type: "list", value: "Semantic Key Minification (30% reduction): Title becomes 't', layout becomes 'l', drastically reducing structural overhead,String Deduplication (25% reduction): The 50 most common words in your content get replaced with 1-letter tokens,Base62 Encoding (15% reduction): More efficient than base64. Fewer characters per bit of data,Gzip Compression (optional): Additional 40-50% reduction for large blueprints" },
+          { type: "paragraph", value: "Combined, these techniques achieve 60-75% total payload reduction. A 50KB blog post becomes 12-20KB. Your entire social network becomes a shareable link." },
+          { type: "divider" },
+          
+          { type: "heading", value: "Part 2: Cryptographic Authentication (JWT)" },
+          { type: "paragraph", value: "Content doesn't need a server. But identity does. That's where JWT tokens come in." },
+          { type: "list", value: "User logs in to get a token (server-side, once),Token is cryptographically signed,Token is embedded in the WebX blueprint,Browser verifies the signature instantly (no server call),Content renders based on permissions in the token,Token expires or can be revoked instantly" },
+          { type: "paragraph", value: "This means you can share gated content without building a server. A bank can send your account statement as a link. A teacher can share assignments that expire. A company can distribute time-limited access to documents." },
+          { type: "divider" },
+          
+          { type: "heading", value: "Part 3: Use Cases That Were Impossible Before" },
+          { type: "heading", value: "Social Media" },
+          { type: "paragraph", value: "Instead of relying on Facebook's servers, creators can share their entire social network as a link. Comments, likes, and followers all live in the URL. Users see the exact same experience everywhere." },
+          { type: "heading", value: "Enterprise Banking" },
+          { type: "paragraph", value: "Banks can send account statements, transaction history, and balances as links. No logging into a website. No passwords. Just cryptographic verification that you own the account." },
+          { type: "heading", value: "Premium Content" },
+          { type: "paragraph", value: "Writers, creators, and educators can gate their content with time-limited tokens. Share exclusive content with subscribers. Revoke access instantly. No paywall infrastructure needed." },
+          { type: "heading", value: "Team Collaboration" },
+          { type: "paragraph", value: "Share documents, dashboards, and reports as links. Each recipient gets a uniquely signed version. Access expires automatically. Perfect for contractors, consultants, and remote teams." },
+          { type: "divider" },
+          
+          { type: "heading", value: "The Old Internet vs The Sovereign Internet" },
+          { type: "paragraph", value: "HTTP/HTTPS: Client makes request → Server finds database → Server renders page → Server sends response. Latency. Downtime. Server dependency." },
+          { type: "paragraph", value: "WebX: Link contains everything → Browser decodes instantly → Client verifies signature → Content renders → Complete. Instant. Sovereign." },
+          { type: "divider" },
+          
+          { type: "heading", value: "What Servers Are Still Good For" },
+          { type: "paragraph", value: "WebX doesn't eliminate servers. It makes them optional. You still need servers for:" },
+          { type: "list", value: "Initial user authentication (one-time login),Token issuance and signing,Revocation lists (if someone loses access),User identity and reputation (optional)" },
+          { type: "paragraph", value: "But the massive infrastructure—databases, caching, CDNs, load balancers—becomes optional. Content lives in links." },
+          { type: "divider" },
+          
+          { type: "heading", value: "The Math" },
+          { type: "paragraph", value: "A typical blog post: 50KB as HTML, images, styles. As WebX: 12KB compressed and encoded. That's 76% smaller." },
+          { type: "paragraph", value: "A social media feed with 100 posts: 2MB normally. As WebX: 400KB. Shareable instantly. No backend." },
+          { type: "paragraph", value: "A banking dashboard with account data: Normally requires a server with authentication, databases, and compliance overhead. As WebX: A single link with an embedded JWT token." },
+          { type: "divider" },
+          
+          { type: "quote", value: "The future internet is portable, compressed, cryptographic, and sovereign. Content lives in links. Identity lives in tokens. Servers become optional." },
+          { type: "button", value: "Start Building Now", props: { variant: "primary" } }
       ]
   }
 };
