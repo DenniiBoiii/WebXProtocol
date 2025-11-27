@@ -6,17 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Terminal, Cpu, Share2, ShieldCheck, Fingerprint } from "lucide-react";
+import { Loader2, Terminal, Cpu, Share2, ShieldCheck, Fingerprint, Heart, MessageCircle, Repeat2, ChevronDown, ChevronUp, Send } from "lucide-react";
 
 interface WebXRendererProps {
   blueprint: WebXBlueprint;
   className?: string;
 }
 
+interface PostData {
+  id: string;
+  author: string;
+  content: string;
+  likes: number;
+  replies: number;
+  shares: number;
+  liked: boolean;
+  expanded: boolean;
+  comments: { author: string; text: string }[];
+}
+
 export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
   const [aiContent, setAiContent] = useState<string | null>(null);
   const [loadingAi, setLoadingAi] = useState(false);
   const blueprintHash = computeBlueprintHash(blueprint);
+  const [posts, setPosts] = useState<PostData[]>([]);
+  const [newCommentText, setNewCommentText] = useState<{ [key: string]: string }>({});
 
   // Simulate AI generation if requested
   useEffect(() => {
@@ -159,26 +173,98 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
           </div>
         );
       
-      case "newsfeed":
-        // Parse posts from dividers - each post is a heading, content, and metrics
-        const posts: { author: string; content: string; metrics: string }[] = [];
-        let currentPost = { author: "", content: "", metrics: "" };
-        
-        blueprint.data.forEach((block) => {
-          if (block.type === "divider") {
+      case "newsfeed": {
+        // Parse posts on first render
+        useEffect(() => {
+          if (posts.length === 0) {
+            const parsedPosts: PostData[] = [];
+            let currentPost = { author: "", content: "", metrics: "" };
+            
+            blueprint.data.forEach((block) => {
+              if (block.type === "divider") {
+                if (currentPost.author) {
+                  const [likesStr, repliesStr, sharesStr] = currentPost.metrics.split(",");
+                  const likes = parseInt(likesStr?.match(/\d+/)?.[0] || "0");
+                  const replies = parseInt(repliesStr?.match(/\d+/)?.[0] || "0");
+                  const shares = parseInt(sharesStr?.match(/\d+/)?.[0] || "0");
+                  
+                  parsedPosts.push({
+                    id: `post-${parsedPosts.length}`,
+                    author: currentPost.author,
+                    content: currentPost.content,
+                    likes,
+                    replies,
+                    shares,
+                    liked: false,
+                    expanded: false,
+                    comments: [
+                      { author: "Casey Dev", text: "This is incredible! 🚀" },
+                      { author: "Morgan Tech", text: "The future is here." }
+                    ]
+                  });
+                  currentPost = { author: "", content: "", metrics: "" };
+                }
+              } else if (block.type === "heading" && block.value?.includes("Post by")) {
+                currentPost.author = block.value.replace("Post by ", "");
+              } else if (block.type === "paragraph" && !currentPost.content) {
+                currentPost.content = block.value || "";
+              } else if (block.type === "list" && !currentPost.metrics) {
+                currentPost.metrics = block.value || "";
+              }
+            });
             if (currentPost.author) {
-              posts.push(currentPost);
-              currentPost = { author: "", content: "", metrics: "" };
+              const [likesStr, repliesStr, sharesStr] = currentPost.metrics.split(",");
+              const likes = parseInt(likesStr?.match(/\d+/)?.[0] || "0");
+              const replies = parseInt(repliesStr?.match(/\d+/)?.[0] || "0");
+              const shares = parseInt(sharesStr?.match(/\d+/)?.[0] || "0");
+              
+              parsedPosts.push({
+                id: `post-${parsedPosts.length}`,
+                author: currentPost.author,
+                content: currentPost.content,
+                likes,
+                replies,
+                shares,
+                liked: false,
+                expanded: false,
+                comments: [
+                  { author: "Alex Build", text: "Amazing work here!" },
+                  { author: "Jordan Prototype", text: "Love this approach." }
+                ]
+              });
             }
-          } else if (block.type === "heading" && block.value?.includes("Post by")) {
-            currentPost.author = block.value.replace("Post by ", "");
-          } else if (block.type === "paragraph" && !currentPost.content) {
-            currentPost.content = block.value || "";
-          } else if (block.type === "list" && !currentPost.metrics) {
-            currentPost.metrics = block.value || "";
+            setPosts(parsedPosts);
           }
-        });
-        if (currentPost.author) posts.push(currentPost);
+        }, [blueprint]);
+
+        const toggleLike = (postId: string) => {
+          setPosts(posts.map(p => 
+            p.id === postId 
+              ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
+              : p
+          ));
+        };
+
+        const toggleExpanded = (postId: string) => {
+          setPosts(posts.map(p => 
+            p.id === postId ? { ...p, expanded: !p.expanded } : p
+          ));
+        };
+
+        const addComment = (postId: string) => {
+          if (!newCommentText[postId]?.trim()) return;
+          
+          setPosts(posts.map(p => 
+            p.id === postId 
+              ? {
+                  ...p,
+                  comments: [...p.comments, { author: "You", text: newCommentText[postId] }],
+                  replies: p.replies + 1
+                }
+              : p
+          ));
+          setNewCommentText({ ...newCommentText, [postId]: "" });
+        };
 
         return (
           <div className="max-w-2xl mx-auto p-6 md:p-8">
@@ -197,25 +283,110 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
             <div className="space-y-4">
               {posts.map((post, idx) => (
                 <motion.div
-                  key={idx}
+                  key={post.id}
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.05 }}
                 >
-                  <Card className="bg-white/5 border-white/10 hover:border-secondary/30 transition-all hover:shadow-lg hover:shadow-secondary/10">
+                  <Card className="bg-white/5 border-white/10 hover:border-secondary/30 transition-all">
                     <CardContent className="p-6">
+                      {/* Header */}
                       <div className="mb-4 pb-4 border-b border-white/10">
                         <h3 className="font-display font-bold text-lg text-secondary">{post.author}</h3>
                       </div>
+
+                      {/* Content */}
                       <p className="text-foreground mb-6 leading-relaxed text-base">{post.content}</p>
-                      <div className="flex gap-6 text-sm text-muted-foreground font-mono">
-                        {post.metrics.split(",").map((metric, i) => (
-                          <div key={i} className="flex items-center gap-2 hover:text-secondary transition-colors cursor-pointer">
-                            <span className="text-primary/60">{metric.trim()}</span>
-                          </div>
-                        ))}
+
+                      {/* Engagement Buttons */}
+                      <div className="flex gap-4 mb-6 pb-6 border-b border-white/10">
+                        <button
+                          onClick={() => toggleLike(post.id)}
+                          className="flex items-center gap-2 text-sm transition-all hover:text-rose-400"
+                        >
+                          <Heart 
+                            className={`w-5 h-5 transition-all ${post.liked ? 'fill-rose-400 text-rose-400' : 'text-muted-foreground'}`} 
+                          />
+                          <span className={post.liked ? 'text-rose-400 font-semibold' : 'text-muted-foreground'}>
+                            {post.likes}
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => toggleExpanded(post.id)}
+                          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-secondary transition-all"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                          <span>{post.replies}</span>
+                        </button>
+
+                        <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-secondary transition-all">
+                          <Repeat2 className="w-5 h-5" />
+                          <span>{post.shares}</span>
+                        </button>
                       </div>
+
+                      {/* Comments Section */}
+                      {post.expanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-4 mb-4"
+                        >
+                          <p className="text-xs font-mono text-primary/70 uppercase tracking-widest">Comments</p>
+                          
+                          {/* Existing Comments */}
+                          <div className="space-y-3 pl-4 border-l border-white/10">
+                            {post.comments.map((comment, i) => (
+                              <div key={i} className="text-sm">
+                                <span className="font-semibold text-secondary">{comment.author}</span>
+                                <p className="text-muted-foreground mt-1">{comment.text}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Reply Input */}
+                          <div className="flex gap-2 mt-4 pt-4 border-t border-white/10">
+                            <Input
+                              placeholder="Write a reply..."
+                              value={newCommentText[post.id] || ""}
+                              onChange={(e) => setNewCommentText({ ...newCommentText, [post.id]: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  addComment(post.id);
+                                }
+                              }}
+                              className="bg-white/5 border-white/10"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => addComment(post.id)}
+                              className="bg-secondary hover:bg-secondary/80"
+                            >
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Expand Button */}
+                      <button
+                        onClick={() => toggleExpanded(post.id)}
+                        className="flex items-center gap-2 text-xs text-primary/70 hover:text-primary transition-all"
+                      >
+                        {post.expanded ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" /> Hide
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" /> Show Comments
+                          </>
+                        )}
+                      </button>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -237,6 +408,7 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
             </footer>
           </div>
         );
+      }
 
       case "minimal":
           return (
