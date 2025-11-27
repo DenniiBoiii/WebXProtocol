@@ -169,23 +169,28 @@ export default function Composer() {
                </DialogHeader>
                
                {/* Payload Metrics */}
-               <div className="grid grid-cols-2 gap-3 mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                 <div>
-                   <p className="text-xs text-muted-foreground font-mono">Original</p>
-                   <p className="text-sm font-bold">{(metrics.originalSize / 1024).toFixed(1)} KB</p>
+               <div className="mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
+                 <div className="grid grid-cols-2 gap-3 mb-4">
+                   <div>
+                     <p className="text-xs text-muted-foreground font-mono">Original</p>
+                     <p className="text-sm font-bold">{(metrics.originalSize / 1024).toFixed(1)} KB</p>
+                   </div>
+                   <div>
+                     <p className="text-xs text-muted-foreground font-mono">Standard</p>
+                     <p className="text-sm font-bold text-yellow-400">{(metrics.base64CompressedSize / 1024).toFixed(1)} KB</p>
+                   </div>
+                   <div>
+                     <p className="text-xs text-muted-foreground font-mono">Advanced</p>
+                     <p className="text-sm font-bold text-green-400">{((metrics as any).optimizedSize / 1024).toFixed(1)} KB</p>
+                   </div>
+                   <div>
+                     <p className="text-xs text-muted-foreground font-mono">Total Savings</p>
+                     <p className="text-sm font-bold text-primary">{((metrics as any).advancedRatio)}% smaller</p>
+                   </div>
                  </div>
-                 <div>
-                   <p className="text-xs text-muted-foreground font-mono">Compressed</p>
-                   <p className="text-sm font-bold text-green-400">{(metrics.base64CompressedSize / 1024).toFixed(1)} KB</p>
-                 </div>
-                 <div>
-                   <p className="text-xs text-muted-foreground font-mono">Ratio</p>
-                   <p className="text-sm font-bold">{metrics.compressionRatio}% smaller</p>
-                 </div>
-                 <div>
-                   <p className="text-xs text-muted-foreground font-mono">Savings</p>
-                   <p className="text-sm font-bold text-primary">{(parseInt(metrics.savings) / 1024).toFixed(1)} KB</p>
-                 </div>
+                 <p className="text-xs text-muted-foreground border-t border-white/10 pt-3">
+                   Advanced uses: semantic compression, string deduplication &amp; base62 encoding
+                 </p>
                </div>
                
                {/* Compression Toggle */}

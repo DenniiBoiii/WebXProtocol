@@ -1,6 +1,163 @@
 import { z } from "zod";
 import pako from "pako";
 
+// --- Encoding: Base62 (more efficient than base64) ---
+
+const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+function bytesToBase62(bytes: Uint8Array): string {
+  let result = "";
+  let num = 0n;
+  
+  for (let i = 0; i < bytes.length; i++) {
+    num = (num << 8n) | BigInt(bytes[i]);
+  }
+  
+  if (num === 0n) return "0";
+  
+  while (num > 0n) {
+    result = BASE62_CHARS[Number(num % 62n)] + result;
+    num = num / 62n;
+  }
+  
+  return result;
+}
+
+function base62ToBytes(str: string): Uint8Array {
+  let num = 0n;
+  for (let i = 0; i < str.length; i++) {
+    num = num * 62n + BigInt(BASE62_CHARS.indexOf(str[i]));
+  }
+  
+  const bytes: number[] = [];
+  while (num > 0n) {
+    bytes.unshift(Number(num & 0xFFn));
+    num = num >> 8n;
+  }
+  
+  return new Uint8Array(bytes);
+}
+
+// --- Semantic Compression: Minify JSON keys ---
+
+const KEY_MAP: Record<string, string> = {
+  "title": "t",
+  "layout": "l",
+  "meta": "m",
+  "data": "d",
+  "type": "y",
+  "value": "v",
+  "props": "p",
+  "version": "vr",
+  "author": "a",
+  "created": "c",
+  "category": "cat",
+  "featured": "f",
+  "downloads": "dl",
+  "prompt": "pr",
+  "auto_generate": "ag",
+  "ai": "ai",
+  "src": "s",
+  "alt": "alt",
+  "variant": "var"
+};
+
+const REVERSE_KEY_MAP = Object.fromEntries(
+  Object.entries(KEY_MAP).map(([k, v]) => [v, k])
+);
+
+function minifyKeys(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(minifyKeys);
+  }
+  if (obj !== null && typeof obj === "object") {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const minKey = KEY_MAP[key] || key;
+      result[minKey] = minifyKeys(value);
+    }
+    return result;
+  }
+  return obj;
+}
+
+function unminifyKeys(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(unminifyKeys);
+  }
+  if (obj !== null && typeof obj === "object") {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const origKey = REVERSE_KEY_MAP[key] || key;
+      result[origKey] = unminifyKeys(value);
+    }
+    return result;
+  }
+  return obj;
+}
+
+// --- String Deduplication ---
+
+function extractStrings(obj: any, strings = new Map<string, number>()): Map<string, number> {
+  if (typeof obj === "string" && obj.length > 4) {
+    strings.set(obj, (strings.get(obj) || 0) + 1);
+  } else if (Array.isArray(obj)) {
+    obj.forEach(item => extractStrings(item, strings));
+  } else if (obj !== null && typeof obj === "object") {
+    Object.values(obj).forEach(value => extractStrings(value, strings));
+  }
+  return strings;
+}
+
+function createStringDict(blueprint: WebXBlueprint): Record<string, string> {
+  const strings = extractStrings(blueprint);
+  const dict: Record<string, string> = {};
+  let index = 0;
+  
+  Array.from(strings.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 50)
+    .forEach(([str]) => {
+      const token = index.toString(36);
+      dict[token] = str;
+      index++;
+    });
+  
+  return dict;
+}
+
+function compressStrings(obj: any, dict: Record<string, string>): any {
+  const reverseDict = Object.fromEntries(Object.entries(dict).map(([k, v]) => [v, k]));
+  
+  if (typeof obj === "string" && reverseDict[obj]) {
+    return { $: reverseDict[obj] };
+  } else if (Array.isArray(obj)) {
+    return obj.map(item => compressStrings(item, dict));
+  } else if (obj !== null && typeof obj === "object") {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = compressStrings(value, dict);
+    }
+    return result;
+  }
+  return obj;
+}
+
+function decompressStrings(obj: any, dict: Record<string, string>): any {
+  if (obj && typeof obj === "object" && obj.$ && typeof obj.$ === "string" && dict[obj.$]) {
+    return dict[obj.$];
+  } else if (Array.isArray(obj)) {
+    return obj.map(item => decompressStrings(item, dict));
+  } else if (obj !== null && typeof obj === "object") {
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = decompressStrings(value, dict);
+    }
+    return result;
+  }
+  return obj;
+}
+
 // --- Types ---
 
 export const ContentBlockSchema = z.object({
@@ -35,16 +192,28 @@ export type WebXBlueprint = z.infer<typeof WebXBlueprintSchema>;
 
 export function encodeWebX(blueprint: WebXBlueprint, compress: boolean = false): string {
   try {
-    let data = JSON.stringify(blueprint);
+    // Step 1: Minify keys semantically
+    const minified = minifyKeys(blueprint);
     
+    // Step 2: Extract and compress strings
+    const stringDict = createStringDict(blueprint);
+    const stringCompressed = compressStrings(minified, stringDict);
+    
+    // Step 3: Create compact payload with dict
+    const payload = { d: stringCompressed, s: stringDict };
+    let data = JSON.stringify(payload);
+    
+    // Step 4: Apply gzip compression if requested
     if (compress) {
-      // Compress with gzip
       const compressed = pako.gzip(data);
       data = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
+      // Mark as compressed with prefix
+      data = "z:" + data;
     }
     
-    // URL-safe base64 encoding
-    return btoa(data).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    // Step 5: Use base62 encoding (more efficient than base64)
+    const binary = new TextEncoder().encode(data);
+    return bytesToBase62(binary);
   } catch (e) {
     console.error("Failed to encode WebX blueprint", e);
     return "";
@@ -53,33 +222,31 @@ export function encodeWebX(blueprint: WebXBlueprint, compress: boolean = false):
 
 export function decodeWebX(payload: string): WebXBlueprint | null {
   try {
-    // Clean the payload of any whitespace
-    let cleanPayload = payload.trim();
+    const cleanPayload = payload.trim();
     
-    // Restore standard base64 characters
-    let base64 = cleanPayload.replace(/-/g, '+').replace(/_/g, '/');
+    // Step 1: Decode from base62
+    const bytes = base62ToBytes(cleanPayload);
+    let json = new TextDecoder().decode(bytes);
     
-    // Add padding if needed
-    while (base64.length % 4) {
-      base64 += '=';
-    }
-    
-    let json = atob(base64);
-    
-    // Try to decompress if it looks like gzip
-    try {
+    // Step 2: Check if compressed
+    if (json.startsWith("z:")) {
+      json = json.slice(2);
       const binary = atob(json);
-      const bytes = new Uint8Array(binary.length);
+      const compressed = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+        compressed[i] = binary.charCodeAt(i);
       }
-      json = pako.ungzip(bytes, { to: 'string' });
-    } catch {
-      // Not compressed, continue with uncompressed json
+      json = pako.ungzip(compressed, { to: 'string' });
     }
     
-    const parsed = JSON.parse(json);
-    return WebXBlueprintSchema.parse(parsed);
+    // Step 3: Parse and decompress
+    const container = JSON.parse(json);
+    const minified = decompressStrings(container.d, container.s || {});
+    
+    // Step 4: Unminify keys
+    const blueprint = unminifyKeys(minified);
+    
+    return WebXBlueprintSchema.parse(blueprint);
   } catch (e) {
     console.error("Failed to decode WebX blueprint", e);
     return null;
@@ -91,25 +258,43 @@ export function getPayloadMetrics(blueprint: WebXBlueprint) {
   const originalSize = new Blob([original]).size;
   
   try {
+    // Unoptimized (just compression)
     const compressed = pako.gzip(original);
     const compressedSize = compressed.length;
     const base64Compressed = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
     const base64CompressedSize = new Blob([base64Compressed]).size;
     
+    // Optimized (all strategies)
+    const minified = minifyKeys(blueprint);
+    const stringDict = createStringDict(blueprint);
+    const stringCompressed = compressStrings(minified, stringDict);
+    const payload = { d: stringCompressed, s: stringDict };
+    let optimized = JSON.stringify(payload);
+    
+    const optimizedCompressed = pako.gzip(optimized);
+    const optimizedBase62 = bytesToBase62(optimizedCompressed);
+    const optimizedSize = new Blob([optimizedBase62]).size;
+    
     return {
       originalSize,
       compressedSize,
       base64CompressedSize,
+      optimizedSize,
       compressionRatio: ((1 - base64CompressedSize / originalSize) * 100).toFixed(1),
-      savings: (originalSize - base64CompressedSize).toFixed(0)
+      advancedRatio: ((1 - optimizedSize / originalSize) * 100).toFixed(1),
+      savings: (originalSize - base64CompressedSize).toFixed(0),
+      advancedSavings: (originalSize - optimizedSize).toFixed(0)
     };
   } catch (e) {
     return {
       originalSize,
       compressedSize: 0,
       base64CompressedSize: 0,
+      optimizedSize: 0,
       compressionRatio: "0",
-      savings: "0"
+      advancedRatio: "0",
+      savings: "0",
+      advancedSavings: "0"
     };
   }
 }
