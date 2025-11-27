@@ -13,13 +13,16 @@ export default function Implement() {
 
   const codeBlocks = [
     {
-      title: "1. Install via npm",
-      code: `npm install webx-protocol`,
+      title: "1. Clone the Repository",
+      code: `git clone https://github.com/webx-protocol/webx-core.git
+cd webx-core
+npm install`,
       language: "bash"
     },
     {
-      title: "2. Import WebX",
-      code: `import { decodeWebX, encodeWebX } from 'webx-protocol';`,
+      title: "2. Import WebX from Source",
+      code: `import { decodeWebX, encodeWebX } from './lib/webx';
+// Or if publishing: import { decodeWebX, encodeWebX } from 'webx-protocol';`,
       language: "typescript"
     },
     {
@@ -126,7 +129,7 @@ console.log(link); // Share this!`,
                     Get WebX rendering in your application with just a few lines of code. No backend required.
                   </p>
                   <div className="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-sm text-green-400 overflow-x-auto">
-                    npm install webx-protocol && npm run dev
+                    git clone https://github.com/webx-protocol/webx-core.git<br />npm install && npm run dev
                   </div>
                 </div>
               </div>
@@ -220,6 +223,45 @@ console.log(link); // Share this!`,
           </div>
         </motion.div>
 
+        {/* Status & Timeline */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <Card className="bg-blue-400/10 border-blue-400/30">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-display font-bold mb-4">Development Status</h2>
+              <p className="text-muted-foreground mb-6">
+                WebX Protocol is currently in alpha development. The core library exists in this repository. Here's what's coming:
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <span className="text-green-400 font-bold min-w-fit">✓ Complete</span>
+                  <p className="text-sm text-muted-foreground">Core compression & encoding library (base62, semantic minification, deduplication)</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-green-400 font-bold min-w-fit">✓ Complete</span>
+                  <p className="text-sm text-muted-foreground">Blueprint schema, renderer, and sample implementations</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-yellow-400 font-bold min-w-fit">⏳ Coming</span>
+                  <p className="text-sm text-muted-foreground">Official npm package publication</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-yellow-400 font-bold min-w-fit">⏳ Coming</span>
+                  <p className="text-sm text-muted-foreground">Custom browser/renderer tooling</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-yellow-400 font-bold min-w-fit">⏳ Coming</span>
+                  <p className="text-sm text-muted-foreground">Official WebX clients for web, mobile, desktop</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Browser/Renderer Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -237,16 +279,13 @@ console.log(link); // Share this!`,
                 <p className="text-sm text-muted-foreground font-mono">
                   // Your custom browser just needs to:
                   <br />1. Parse the payload (base62 decoded)
-                  <br />2. Decompress the blueprint
-                  <br />3. Render according to the layout type
-                  <br />4. Verify JWT tokens (optional)
+                  <br />2. Decompress the blueprint (using pako for gzip)
+                  <br />3. Decompress strings using the included dictionary
+                  <br />4. Render according to the layout type
+                  <br />5. Verify JWT tokens (optional, cryptographic verification)
                 </p>
               </div>
-              <Link href={`#`}>
-                <Button className="gap-2">
-                  View Blueprint Format Spec <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
+              <p className="text-xs text-muted-foreground">Check the <code className="bg-black/50 px-2 py-1 rounded">client/src/lib/webx.ts</code> file in the repository for the complete implementation.</p>
             </CardContent>
           </Card>
         </motion.div>
