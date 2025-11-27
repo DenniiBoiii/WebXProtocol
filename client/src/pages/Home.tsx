@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import comparisonDiagram from "@assets/generated_images/webx_vs_http_comparison_diagram.png";
+import magicLink from "@assets/generated_images/magic_hyperlink_with_page_inside.png";
 
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
@@ -170,6 +172,157 @@ export default function Home() {
               </Card>
             </motion.div>
           ))}
+        </div>
+
+        {/* WebX for Dummies */}
+        <div className="border-t border-white/10 pt-12 mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <BookOpen className="w-5 h-5 text-secondary" />
+              <span className="text-xs font-mono uppercase tracking-widest text-secondary">ELI5 Edition</span>
+            </div>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">WebX for Dummies</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              No tech degree required. Here's how WebX works in plain English.
+            </p>
+          </motion.div>
+
+          {/* Visual Diagrams */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="rounded-xl overflow-hidden border border-white/10 hover:border-primary/30 transition-all"
+            >
+              <img src={comparisonDiagram} alt="WebX vs HTTP" className="w-full h-full object-cover" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="rounded-xl overflow-hidden border border-white/10 hover:border-primary/30 transition-all"
+            >
+              <img src={magicLink} alt="Magic Link" className="w-full h-full object-cover" />
+            </motion.div>
+          </div>
+
+          {/* Simple Explanations */}
+          <div className="grid md:grid-cols-2 gap-6 mb-12">
+            {[
+              {
+                title: "The Old Internet",
+                icon: <Database className="w-6 h-6 text-red-400" />,
+                steps: [
+                  "You click a link",
+                  "Your browser finds a server somewhere",
+                  "The server sends you a page",
+                  "You see the page"
+                ],
+                note: "Needs servers. Costs money. Takes time."
+              },
+              {
+                title: "The WebX Internet",
+                icon: <Link2 className="w-6 h-6 text-green-400" />,
+                steps: [
+                  "You click a link",
+                  "The link contains EVERYTHING",
+                  "Your browser builds the page instantly",
+                  "You see the page"
+                ],
+                note: "No servers needed. Free. Instant."
+              },
+              {
+                title: "A Link is a Container",
+                icon: <ZapIcon className="w-6 h-6 text-blue-400" />,
+                steps: [
+                  "Traditional: Link = address → GO GET DATA",
+                  "WebX: Link = address + DATA inside",
+                  "It's like sending an entire box to someone",
+                  "Instead of just the address of the box"
+                ],
+                note: "The whole page is IN the link itself."
+              },
+              {
+                title: "Why This is Awesome",
+                icon: <Flame className="w-6 h-6 text-orange-400" />,
+                steps: [
+                  "✨ No hosting bills (ever)",
+                  "⚡ Pages load instantly",
+                  "🔗 Share complex pages in one link",
+                  "🤖 AI can generate pages on the fly"
+                ],
+                note: "Welcome to the future."
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-6 h-full hover:border-white/20 transition-all">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-white/5 rounded-lg">{item.icon}</div>
+                    <h3 className="text-lg font-display font-bold">{item.title}</h3>
+                  </div>
+                  <ol className="space-y-2 mb-4">
+                    {item.steps.map((step, idx) => (
+                      <li key={idx} className="text-sm text-muted-foreground flex gap-2">
+                        <span className="font-mono text-primary/70 min-w-6">{idx + 1}.</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-primary/80 font-mono">{item.note}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* FAQ Style */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-8"
+          >
+            <h3 className="text-2xl font-display font-bold mb-8">Quick Questions</h3>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <p className="font-bold text-primary mb-2">Q: How is the whole page in one link?</p>
+                <p className="text-sm text-muted-foreground">
+                  The page is compressed into JSON (basically text describing the page) and encoded into the link. When you click it, your browser decodes the text and builds the page. It's like sending someone a LEGO instruction set instead of a finished LEGO castle.
+                </p>
+              </div>
+              <div>
+                <p className="font-bold text-primary mb-2">Q: What's the limit? Won't links get too long?</p>
+                <p className="text-sm text-muted-foreground">
+                  Good question! URLs can be quite long. For super complex pages, you could split content or use AI to generate it on-the-fly. Most pages (blogs, portfolios, announcements) fit easily in a single link.
+                </p>
+              </div>
+              <div>
+                <p className="font-bold text-primary mb-2">Q: Can I modify a page I received?</p>
+                <p className="text-sm text-muted-foreground">
+                  Yes! Copy the link, modify it in the Composer, and share your new version. The content hash ensures everyone sees the EXACT same thing though. No surprise changes.
+                </p>
+              </div>
+              <div>
+                <p className="font-bold text-primary mb-2">Q: What about passwords and security?</p>
+                <p className="text-sm text-muted-foreground">
+                  WebX is for public content (like regular websites). For secure stuff, you still need servers. Think of WebX as replacing basic web hosting, not authentication systems.
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* The Nexus: Webstore */}
