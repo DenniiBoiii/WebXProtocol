@@ -189,7 +189,7 @@ export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 
 export const WebXBlueprintSchema = z.object({
   title: z.string(),
-  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal", "bank", "messaging", "email"]),
+  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal", "bank", "messaging", "email", "postcard"]),
   data: z.array(ContentBlockSchema),
   ai: z.object({
     prompt: z.string(),

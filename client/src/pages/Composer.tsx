@@ -420,6 +420,7 @@ export default function Composer() {
                                 <SelectItem value="article">Article</SelectItem>
                                 <SelectItem value="card">Card</SelectItem>
                                 <SelectItem value="minimal">Minimal</SelectItem>
+                                <SelectItem value="postcard">Postcard</SelectItem>
                                 <SelectItem value="newsfeed">Newsfeed (WIP)</SelectItem>
                             </SelectContent>
                         </Select>
