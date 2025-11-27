@@ -267,7 +267,10 @@ export default function Whitepaper() {
 
                 <Card className="bg-white/5 border-white/10">
                   <CardContent className="p-8">
-                    <h3 className="text-xl font-bold mb-4">Content Block Types</h3>
+                    <h3 className="text-xl font-bold mb-4">Core Block Schema & Primitives</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Foundation block types that form the basis of WebX blueprints. (See Section 9 for the complete list of 22+ block types.)
+                    </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {[
                         { type: "heading", desc: "Page/section titles with optional level" },
