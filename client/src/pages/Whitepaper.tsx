@@ -25,8 +25,9 @@ export default function Whitepaper() {
     { id: "usecases", title: "7. Use Cases & Applications" },
     { id: "comparison", title: "8. Comparison with Alternatives" },
     { id: "extensibility", title: "9. Extensibility & Ecosystem" },
-    { id: "implementation", title: "10. Implementation Roadmap" },
-    { id: "conclusion", title: "11. Conclusion" }
+    { id: "distribution", title: "10. Distribution: URLs & .webx Files" },
+    { id: "implementation", title: "11. Implementation Roadmap" },
+    { id: "conclusion", title: "12. Conclusion" }
   ];
 
   return (
@@ -826,6 +827,163 @@ export default function Whitepaper() {
                       <li>✓ Pre-built examples and templates</li>
                       <li>✓ Community-driven addons</li>
                     </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </motion.div>
+          </section>
+
+          {/* Distribution & File Format */}
+          <section id="distribution" className="mb-20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold mb-6">10. Distribution: URLs & .webx Files</h2>
+              <div className="space-y-6">
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">Two Sharing Mechanisms</h3>
+                    <p className="text-muted-foreground mb-6">
+                      WebX blueprints can be shared through two complementary formats, each optimized for different use cases:
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="bg-white/5 p-6 rounded border border-white/10">
+                        <p className="font-bold text-lg mb-3">1. URL-Encoded Links</p>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>✓ Paste directly into chat, email, social media</li>
+                          <li>✓ Scannable via QR codes</li>
+                          <li>✓ Works across browsers without installation</li>
+                          <li>✓ Instant rendering (no file save/load)</li>
+                          <li>✓ Optimal for quick sharing and viral distribution</li>
+                          <li>✓ Limited by URL length (~2-8KB content)</li>
+                        </ul>
+                      </div>
+                      <div className="bg-white/5 p-6 rounded border border-white/10">
+                        <p className="font-bold text-lg mb-3">2. .webx File Format</p>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>✓ Share as email attachment or file</li>
+                          <li>✓ Transfer via USB, cloud storage, messaging</li>
+                          <li>✓ No practical size limits (can embed large content)</li>
+                          <li>✓ Editable in Composer (import/export)</li>
+                          <li>✓ Perfect for offline-first workflows</li>
+                          <li>✓ Ideal for censored regions</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">.webx File Specification</h3>
+                    <p className="text-muted-foreground mb-4">
+                      The <code className="bg-black/50 px-2 py-1 rounded text-sm">.webx</code> file format is a JSON file containing a complete WebX blueprint:
+                    </p>
+                    <div className="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-xs mb-4 overflow-x-auto">
+                      <pre>{`{
+  "title": "My WebX Document",
+  "layout": "article",
+  "data": [...],
+  "meta": {
+    "version": "1.0",
+    "author": "Jane Doe",
+    "created": 1700000000000
+  },
+  "jwt": { ... }
+}`}</pre>
+                    </div>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li>• Valid JSON format; readable in any text editor</li>
+                      <li>• MIME type: <code className="bg-black/50 px-1 py-0.5 rounded text-xs">application/webx+json</code></li>
+                      <li>• Filename convention: <code className="bg-black/50 px-1 py-0.5 rounded text-xs">document-name.webx</code></li>
+                      <li>• Can be imported into Composer for editing</li>
+                      <li>• Can be converted to URL links with one click</li>
+                      <li>• Supports all blueprint features (expiration, AI prompts, custom layouts)</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">Use Cases by Format</h3>
+                    <div className="space-y-4">
+                      {[
+                        {
+                          scenario: "Quick Social Media Share",
+                          format: "URL Link",
+                          reason: "Works directly in posts without downloads"
+                        },
+                        {
+                          scenario: "Journalist Sharing Articles in Restricted Country",
+                          format: ".webx File",
+                          reason: "Transfer via USB or mesh network, works offline"
+                        },
+                        {
+                          scenario: "Team Collaboration & Editing",
+                          format: ".webx File",
+                          reason: "Export for review, import after edits"
+                        },
+                        {
+                          scenario: "QR Code on Print Media",
+                          format: "URL Link",
+                          reason: "Scannable; instant rendering in browser"
+                        },
+                        {
+                          scenario: "Email Attachment (Large Content)",
+                          format: ".webx File",
+                          reason: "No URL length limitations"
+                        },
+                        {
+                          scenario: "One-Time Sensitive Documents",
+                          format: "URL Link + Expiration",
+                          reason: "Embedded JWT ensures automatic expiration"
+                        },
+                        {
+                          scenario: "Archive & Long-Term Storage",
+                          format: ".webx File",
+                          reason: "Portable, editable, readable by future systems"
+                        },
+                        {
+                          scenario: "Mobile-First Applications",
+                          format: "URL Link",
+                          reason: "No file picker needed; instant access"
+                        }
+                      ].map((usecase, idx) => (
+                        <div key={idx} className="bg-white/5 p-4 rounded border border-white/10">
+                          <p className="font-bold text-sm mb-2">{usecase.scenario}</p>
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">{usecase.format}</span>
+                            <span className="text-xs text-muted-foreground text-right flex-1 ml-4">{usecase.reason}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">Converting Between Formats</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-bold text-sm mb-2">URL Link → .webx File</p>
+                        <p className="text-sm text-muted-foreground">
+                          When you open a URL link in the renderer, you can download the blueprint as a .webx file for offline backup or editing.
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm mb-2">.webx File → URL Link</p>
+                        <p className="text-sm text-muted-foreground">
+                          Import a .webx file into the Composer, then generate a URL link with one click. Perfect for converting archived files back into shareable links.
+                        </p>
+                      </div>
+                      <div className="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-xs text-muted-foreground">
+                        <p><span className="text-green-400">// Composer enables bidirectional conversion</span></p>
+                        <p>.webx file ↔ Blueprint Editor ↔ URL Link</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

@@ -152,8 +152,8 @@ export default function Home() {
             },
             {
               icon: <Share2 className="w-6 h-6 text-secondary" />,
-              title: "Portable Blueprints",
-              desc: "Share entire pages as a single link. The content lives inside the URL. Works across every platform."
+              title: "Multiple Sharing Formats",
+              desc: "Share as URL links for instant access, or export as .webx files for offline sharing, email attachments, and censored regions."
             },
             {
               icon: <Code className="w-6 h-6 text-purple-400" />,

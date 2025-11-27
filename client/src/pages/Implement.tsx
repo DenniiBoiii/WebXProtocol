@@ -181,6 +181,59 @@ console.log(link); // Share this!`,
           ))}
         </motion.div>
 
+        {/* File Format & Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-display font-bold mb-8">Working with .webx Files</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              {
+                title: "Export Blueprints as .webx",
+                desc: "Save your work as portable JSON files. Perfect for backup, sharing via email, or transferring to other systems.",
+                code: `// In Composer: Click "Download .webx"
+blueprint.json → document-name.webx`
+              },
+              {
+                title: "Import .webx Files",
+                desc: "Load previously saved blueprints back into the Composer for editing, sharing, or conversion to URL links.",
+                code: `// In Composer: Click "Import .webx"
+file.webx → editor → edit → export/share`
+              },
+              {
+                title: "Offline Sharing & Distribution",
+                desc: "Transfer .webx files via USB, cloud storage, messaging apps, or any method. Works completely offline—no internet needed.",
+                code: `// Share via:
+• Email attachment
+• Cloud storage (Google Drive)
+• Peer-to-peer transfer
+• USB drive`
+              },
+              {
+                title: "Bidirectional Conversion",
+                desc: "Convert between URL links and .webx files seamlessly. Export a link as a file, or turn a file into a shareable link.",
+                code: `// Convert:
+.webx file → import → editor
+→ generate link OR
+→ download as .webx`
+              }
+            ].map((feature, idx) => (
+              <Card key={idx} className="bg-white/5 border-white/10">
+                <CardContent className="p-6">
+                  <h4 className="font-bold mb-2">{feature.title}</h4>
+                  <p className="text-sm text-muted-foreground mb-4">{feature.desc}</p>
+                  <div className="bg-black/50 border border-white/10 rounded p-3 font-mono text-xs text-muted-foreground">
+                    <pre>{feature.code}</pre>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Advanced Features */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
