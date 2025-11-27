@@ -14,6 +14,35 @@ export default function Whitepaper() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const downloadAsWebX = () => {
+    const blueprint = {
+      title: "WebX Protocol Whitepaper",
+      layout: "article",
+      meta: {
+        version: "1.0",
+        author: "WebX Team",
+        created: Date.now(),
+        description: "A Serverless Web Protocol for Self-Contained, Immutable, Shareable Content Using URL-Encoded Blueprints"
+      },
+      data: [
+        { type: "heading", value: "WebX Protocol Whitepaper" },
+        { type: "paragraph", value: "A Serverless Web Protocol for Self-Contained, Immutable, Shareable Content Using URL-Encoded Blueprints" },
+        { type: "paragraph", value: "This comprehensive whitepaper covers the complete WebX protocol specification, including architecture, compression techniques, security, performance analysis, use cases, and implementation roadmap." }
+      ]
+    };
+    
+    const dataStr = JSON.stringify(blueprint, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `WebX-Whitepaper-${Date.now()}.webx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const sections = [
     { id: "abstract", title: "Abstract" },
     { id: "introduction", title: "1. Introduction" },
@@ -1151,6 +1180,14 @@ export default function Whitepaper() {
                 }}
               >
                 <Download className="w-4 h-4" /> Download as HTML
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="gap-2"
+                onClick={downloadAsWebX}
+              >
+                <Download className="w-4 h-4" /> Download as .webx
               </Button>
             </div>
           </motion.div>
