@@ -170,7 +170,7 @@ export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 
 export const WebXBlueprintSchema = z.object({
   title: z.string(),
-  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal", "bank"]),
+  layout: z.enum(["article", "card", "newsfeed", "gallery", "form", "minimal", "bank", "messaging", "email"]),
   data: z.array(ContentBlockSchema),
   ai: z.object({
     prompt: z.string(),
@@ -414,6 +414,24 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
           { type: "paragraph", value: "WebX just changed everything. I literally sent my entire portfolio to 100 people in one link. The web is never going back." },
           { type: "list", value: "❤️ 5,672 likes,💬 1,203 replies,🔗 2,341 shares" },
           { type: "button", value: "Create Your Own Feed", props: { variant: "primary" } }
+      ]
+  },
+  instant_messaging: {
+      title: "WebXChat - Encrypted Conversations",
+      layout: "messaging",
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "showcase", featured: true, downloads: 3890 },
+      data: [
+          { type: "heading", value: "WebXChat" },
+          { type: "paragraph", value: "End-to-end encrypted conversations delivered as a single link. No accounts. No servers. Perfect privacy." }
+      ]
+  },
+  email_service: {
+      title: "WebXMail - Encrypted Email Exchange",
+      layout: "email",
+      meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "showcase", featured: true, downloads: 2940 },
+      data: [
+          { type: "heading", value: "WebXMail" },
+          { type: "paragraph", value: "Professional email delivered as a link. Instant access. No login required. Cryptographically verified." }
       ]
   },
   bank_dashboard: {

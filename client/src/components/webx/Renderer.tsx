@@ -589,6 +589,178 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
         );
       }
 
+      case "messaging": {
+        const [messages, setMessages] = useState([
+          { id: 1, author: "Alex", text: "Hey! Just got access to the new WebXChat. This is incredible! 🚀", timestamp: "2:14 PM" },
+          { id: 2, author: "You", text: "I know right? No servers, end-to-end encrypted, and it's just a link!", timestamp: "2:15 PM" },
+          { id: 3, author: "Alex", text: "How is that even possible? The entire conversation is in the URL?", timestamp: "2:16 PM" },
+          { id: 4, author: "You", text: "Exactly. Compression magic + cryptography. Share the link, they see the same conversation.", timestamp: "2:17 PM" },
+          { id: 5, author: "Alex", text: "This changes everything. No data collection. No ads. Just pure communication.", timestamp: "2:18 PM" }
+        ]);
+        const [newMessage, setNewMessage] = useState("");
+
+        const sendMessage = () => {
+          if (!newMessage.trim()) return;
+          setMessages([...messages, {
+            id: messages.length + 1,
+            author: "You",
+            text: newMessage,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }]);
+          setNewMessage("");
+        };
+
+        return (
+          <div className="max-w-2xl mx-auto p-6 md:p-8 h-screen flex flex-col">
+            <header className="mb-6">
+              <Badge variant="outline" className="mb-4 border-blue-400/50 text-blue-400 hover:bg-blue-400/10">
+                WebX Protocol // ENCRYPTED MESSAGING
+              </Badge>
+              <h1 className="text-3xl font-display font-bold text-glow">WebXChat</h1>
+              <p className="text-sm text-muted-foreground">End-to-end encrypted. No servers. No tracking.</p>
+            </header>
+
+            <Card className="flex-1 flex flex-col bg-white/5 border-white/10 mb-4">
+              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+                {messages.map((msg, idx) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className={`flex ${msg.author === "You" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div className={`max-w-xs ${msg.author === "You" ? "bg-blue-600/20 border-blue-400/30" : "bg-white/5 border-white/10"} border rounded-lg p-3`}>
+                      {msg.author !== "You" && (
+                        <p className="text-xs font-semibold text-blue-400 mb-1">{msg.author}</p>
+                      )}
+                      <p className="text-sm text-foreground">{msg.text}</p>
+                      <p className="text-xs text-muted-foreground mt-2">{msg.timestamp}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-2">
+              <Input
+                placeholder="Type a message..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                className="bg-white/5 border-white/10"
+              />
+              <Button
+                onClick={sendMessage}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        );
+      }
+
+      case "email": {
+        const [selectedEmail, setSelectedEmail] = useState(0);
+        const emails = [
+          {
+            from: "founder@webx.io",
+            subject: "Welcome to the Sovereign Internet",
+            date: "Nov 27, 2025",
+            body: "We're thrilled you've joined us. WebX represents a fundamental shift in how the internet works. No more servers. No more dependencies. Pure protocol. The entire web is becoming portable."
+          },
+          {
+            from: "team@webx.io",
+            subject: "Your First WebX Blueprint is Ready",
+            date: "Nov 26, 2025",
+            body: "Congratulations! Your first blueprint has been created and compressed. It's 72% smaller than the original. Share the link with anyone—they'll see the exact same content, verified cryptographically."
+          },
+          {
+            from: "docs@webx.io",
+            subject: "API Documentation Update",
+            date: "Nov 25, 2025",
+            body: "We've released updated documentation for the compression stack. Learn about semantic minification, string deduplication, base62 encoding, and optional gzip. Everything you need to build."
+          }
+        ];
+
+        return (
+          <div className="max-w-4xl mx-auto p-6 md:p-8">
+            <header className="mb-8">
+              <Badge variant="outline" className="mb-4 border-orange-400/50 text-orange-400 hover:bg-orange-400/10">
+                WebX Protocol // SECURE EMAIL
+              </Badge>
+              <h1 className="text-3xl font-display font-bold text-glow">WebXMail</h1>
+              <p className="text-sm text-muted-foreground">Professional email. No login. Verified instantly.</p>
+            </header>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Email List */}
+              <div className="md:col-span-1">
+                <div className="space-y-2 bg-white/5 rounded-lg border border-white/10 p-4">
+                  {emails.map((email, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedEmail(idx)}
+                      className={`w-full p-3 rounded-lg text-left transition-all ${
+                        selectedEmail === idx
+                          ? "bg-orange-400/20 border border-orange-400 shadow-lg shadow-orange-400/20"
+                          : "bg-white/5 border border-white/10 hover:border-orange-400/30"
+                      }`}
+                    >
+                      <p className="text-xs font-semibold text-orange-400 mb-1">{email.from}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{email.subject}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Email Content */}
+              <div className="md:col-span-2">
+                <Card className="bg-white/5 border-white/10 h-full">
+                  <CardContent className="p-6">
+                    <motion.div
+                      key={selectedEmail}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="mb-4 pb-4 border-b border-white/10">
+                        <p className="text-xs text-orange-400 font-mono mb-2">FROM</p>
+                        <p className="font-semibold text-foreground">{emails[selectedEmail].from}</p>
+                      </div>
+
+                      <div className="mb-4 pb-4 border-b border-white/10">
+                        <p className="text-xs text-muted-foreground font-mono mb-2">SUBJECT</p>
+                        <p className="text-lg font-display font-bold text-glow">{emails[selectedEmail].subject}</p>
+                      </div>
+
+                      <div className="mb-6 pb-6 border-b border-white/10">
+                        <p className="text-xs text-muted-foreground">{emails[selectedEmail].date}</p>
+                      </div>
+
+                      <div className="prose prose-invert prose-sm">
+                        <p className="text-foreground leading-relaxed">{emails[selectedEmail].body}</p>
+                      </div>
+
+                      <div className="mt-8 p-4 bg-white/5 rounded-lg border border-white/10">
+                        <p className="text-xs font-mono text-orange-400 mb-2">CRYPTOGRAPHIC VERIFICATION</p>
+                        <p className="text-xs text-muted-foreground">This email is signed and verified. Content cannot be modified. Hash ensures authenticity across all recipients.</p>
+                      </div>
+                    </motion.div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       case "minimal":
           return (
               <div className="max-w-2xl mx-auto p-8 md:p-12 font-mono text-sm">

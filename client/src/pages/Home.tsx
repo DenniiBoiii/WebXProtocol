@@ -360,7 +360,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Social Media */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -370,32 +370,22 @@ export default function Home() {
               <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.social_media_feed)}`}>
                 <div className="group cursor-pointer h-full">
                   <div className="bg-gradient-to-br from-secondary/20 to-transparent p-[1px] rounded-xl hover:from-secondary hover:to-primary transition-all duration-500 h-full">
-                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-8 h-full flex flex-col relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
-                        <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-secondary" />
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-secondary" />
                       </div>
-                      
-                      <div className="mb-6">
-                        <h3 className="text-2xl font-display font-bold mb-3 group-hover:text-secondary transition-colors">NexusNet</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          A fully-featured social media feed built entirely on WebX. Multiple user profiles, engagement metrics, and rich content—all in one link.
-                        </p>
-                      </div>
-
-                      <div className="flex-1 mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-xs font-mono text-primary/80 mb-3 font-bold">What's Possible:</p>
-                        <ul className="space-y-2 text-xs text-muted-foreground">
-                          <li>✓ Multi-user feed with real data</li>
-                          <li>✓ Engagement tracking</li>
-                          <li>✓ Complex content blocks</li>
-                          <li>✓ Client-side interactions</li>
-                          <li>✓ Share the entire social network in one URL</li>
+                      <h3 className="text-xl font-display font-bold mb-2 group-hover:text-secondary transition-colors">NexusNet</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Social media feed with likes, comments, and engagement.</p>
+                      <div className="flex-1 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          <li>✓ Multi-user interactions</li>
+                          <li>✓ Live engagement</li>
+                          <li>✓ Comment threads</li>
                         </ul>
                       </div>
-
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
-                        <span className="w-2 h-2 rounded-full bg-secondary group-hover:bg-secondary transition-colors" />
-                        Click to explore the live feed
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-3 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-secondary" />
+                        Live feed
                       </div>
                     </div>
                   </div>
@@ -405,39 +395,95 @@ export default function Home() {
 
             {/* Banking */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
               <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.bank_dashboard)}`}>
                 <div className="group cursor-pointer h-full">
                   <div className="bg-gradient-to-br from-green-400/20 to-transparent p-[1px] rounded-xl hover:from-green-400 hover:to-primary transition-all duration-500 h-full">
-                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-8 h-full flex flex-col relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-100 transition-opacity z-10">
-                        <ArrowRight className="w-6 h-6 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-green-400" />
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-green-400" />
                       </div>
-                      
-                      <div className="mb-6">
-                        <h3 className="text-2xl font-display font-bold mb-3 group-hover:text-green-400 transition-colors">SecureBank</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Enterprise banking portal with JWT authentication, encrypted data, and cryptographic verification—all verified through a single immutable link.
-                        </p>
-                      </div>
-
-                      <div className="flex-1 mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
-                        <p className="text-xs font-mono text-green-400/80 mb-3 font-bold">What's Possible:</p>
-                        <ul className="space-y-2 text-xs text-muted-foreground">
-                          <li>✓ Embedded JWT authentication</li>
-                          <li>✓ Account balances & transactions</li>
-                          <li>✓ Cryptographic verification</li>
-                          <li>✓ Zero-knowledge sharing</li>
-                          <li>✓ Instant revocation via token</li>
+                      <h3 className="text-xl font-display font-bold mb-2 group-hover:text-green-400 transition-colors">SecureBank</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Banking portal with accounts and transactions.</p>
+                      <div className="flex-1 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          <li>✓ JWT authentication</li>
+                          <li>✓ Account management</li>
+                          <li>✓ Transactions</li>
                         </ul>
                       </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-3 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-green-400" />
+                        Banking portal
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
 
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
-                        <span className="w-2 h-2 rounded-full bg-green-400 group-hover:bg-green-400 transition-colors" />
-                        Click to view your secure portal
+            {/* Messaging */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.instant_messaging)}`}>
+                <div className="group cursor-pointer h-full">
+                  <div className="bg-gradient-to-br from-blue-400/20 to-transparent p-[1px] rounded-xl hover:from-blue-400 hover:to-primary transition-all duration-500 h-full">
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-blue-400" />
+                      </div>
+                      <h3 className="text-xl font-display font-bold mb-2 group-hover:text-blue-400 transition-colors">WebXChat</h3>
+                      <p className="text-xs text-muted-foreground mb-4">End-to-end encrypted conversations in a link.</p>
+                      <div className="flex-1 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          <li>✓ E2E encryption</li>
+                          <li>✓ No servers</li>
+                          <li>✓ Instant sharing</li>
+                        </ul>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-3 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-blue-400" />
+                        Conversations
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* Email */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <Link href={`/view?payload=${encodeWebX(SAMPLE_BLUEPRINTS.email_service)}`}>
+                <div className="group cursor-pointer h-full">
+                  <div className="bg-gradient-to-br from-orange-400/20 to-transparent p-[1px] rounded-xl hover:from-orange-400 hover:to-primary transition-all duration-500 h-full">
+                    <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full flex flex-col relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity z-10">
+                        <ArrowRight className="w-5 h-5 -rotate-45 group-hover:rotate-0 transition-transform duration-300 text-orange-400" />
+                      </div>
+                      <h3 className="text-xl font-display font-bold mb-2 group-hover:text-orange-400 transition-colors">WebXMail</h3>
+                      <p className="text-xs text-muted-foreground mb-4">Professional email delivered as an immutable link.</p>
+                      <div className="flex-1 mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <ul className="space-y-1 text-xs text-muted-foreground">
+                          <li>✓ No login needed</li>
+                          <li>✓ Cryptographic proof</li>
+                          <li>✓ Forever accessible</li>
+                        </ul>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono pt-3 border-t border-white/5">
+                        <span className="w-2 h-2 rounded-full bg-orange-400" />
+                        Email service
                       </div>
                     </div>
                   </div>
