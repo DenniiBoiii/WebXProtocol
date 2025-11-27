@@ -110,6 +110,17 @@ export default function Composer() {
         newBlock.props = { src: "https://placehold.co/600x400", alt: "Placeholder" };
         newBlock.value = "https://placehold.co/600x400"; // fallback
     }
+    if (type === "metric" && !value) {
+        newBlock.value = "9.2K";
+        newBlock.props = { label: "Growth", subtitle: "Month over month" };
+    }
+    if (type === "table" && !value) {
+        newBlock.value = "Header 1,Header 2,Header 3|Data 1,Data 2,Data 3";
+    }
+    if (type === "callout" && !value) {
+        newBlock.value = "Important information goes here";
+        newBlock.props = { title: "Note", severity: "info" };
+    }
     setBlueprint(prev => ({
       ...prev,
       data: [...prev.data, newBlock]
@@ -541,8 +552,8 @@ export default function Composer() {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-4">
-                    {["heading", "paragraph", "image", "list", "button", "quote", "code", "divider"].map((type) => (
+                <div className="grid grid-cols-4 gap-2 pt-4">
+                    {["heading", "paragraph", "image", "list", "button", "quote", "code", "divider", "video", "audio", "table", "metric", "callout", "embed", "json", "formula"].map((type) => (
                         <Button 
                             key={type} 
                             variant="outline" 

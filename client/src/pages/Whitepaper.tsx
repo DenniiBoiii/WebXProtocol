@@ -789,6 +789,49 @@ export default function Whitepaper() {
               <div className="space-y-6">
                 <Card className="bg-white/5 border-white/10">
                   <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">Expanded Content Block Types</h3>
+                    <p className="text-muted-foreground mb-6">
+                      WebX now supports 22+ content block types for modern and future web use cases:
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-4 mb-6">
+                      <div className="bg-black/30 p-4 rounded border border-white/10">
+                        <p className="font-bold text-primary text-sm mb-3">Core Blocks</p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>✓ heading, paragraph, image, list</li>
+                          <li>✓ code, quote, divider, input</li>
+                          <li>✓ button, markdown</li>
+                        </ul>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded border border-white/10">
+                        <p className="font-bold text-secondary text-sm mb-3">Media & Streaming</p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>✓ video, audio</li>
+                          <li>✓ embed (iframe), qr-code</li>
+                        </ul>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded border border-white/10">
+                        <p className="font-bold text-purple-400 text-sm mb-3">Data & Visualization</p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>✓ table, metric (KPI display)</li>
+                          <li>✓ chart, json, formula</li>
+                        </ul>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded border border-white/10">
+                        <p className="font-bold text-green-400 text-sm mb-3">Interactive & Layout</p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          <li>✓ callout (alerts), card-grid</li>
+                          <li>✓ tab, toggle, timeline</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic border-t border-white/10 pt-4">
+                      Each block type supports flexible props for customization. For example: metrics display KPIs with labels, callouts support info/warning/error/success severity levels, and embeds support custom heights.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/5 border-white/10">
+                  <CardContent className="p-8">
                     <h3 className="text-xl font-bold mb-4">Extension Architecture</h3>
                     <p className="text-muted-foreground mb-4">
                       WebX is designed like HTTP—simple at its core, extensible in practice. Just as HTTP gained HTTPS, HTTP/2, and compression over time, WebX supports custom implementations:
@@ -812,8 +855,8 @@ export default function Whitepaper() {
                           desc: "JWT is default; add OAuth, biometric, multi-signature, ZK proofs"
                         },
                         {
-                          name: "Content Plugins",
-                          desc: "Extend beyond text/images: video, audio, 3D models, games, AR"
+                          name: "Custom Block Types",
+                          desc: "Beyond the 22+ built-in blocks: 3D viewers, holographic data, specialized visualizations"
                         }
                       ].map((ext, idx) => (
                         <div key={idx} className="bg-white/5 p-4 rounded border border-white/10">

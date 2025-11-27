@@ -59,7 +59,13 @@ const KEY_MAP: Record<string, string> = {
   "ai": "ai",
   "src": "s",
   "alt": "alt",
-  "variant": "var"
+  "variant": "var",
+  "rows": "r",
+  "columns": "col",
+  "severity": "sev",
+  "url": "u",
+  "width": "w",
+  "height": "h"
 };
 
 const REVERSE_KEY_MAP = Object.fromEntries(
@@ -161,7 +167,20 @@ function decompressStrings(obj: any, dict: Record<string, string>): any {
 // --- Types ---
 
 export const ContentBlockSchema = z.object({
-  type: z.enum(["heading", "paragraph", "image", "list", "code", "input", "button", "quote", "divider"]),
+  type: z.enum([
+    // Core content
+    "heading", "paragraph", "image", "list", "code", "quote", "divider",
+    // Interactive
+    "input", "button", "tab", "toggle", "embed",
+    // Data & Visualization
+    "table", "metric", "chart", "json", "formula",
+    // Media
+    "video", "audio",
+    // Layout & Emphasis
+    "callout", "card-grid", "timeline",
+    // Special
+    "qr-code", "markdown"
+  ]),
   value: z.string().optional(),
   props: z.record(z.any()).optional(),
 });

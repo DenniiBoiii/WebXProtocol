@@ -143,6 +143,91 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
         )
       case "divider":
           return <Separator key={index} className="my-8 bg-white/10" />
+      case "video":
+        return (
+          <div key={index} className="rounded-xl overflow-hidden my-6 border border-white/10 shadow-2xl">
+            <video src={block.props?.src || block.value} controls className="w-full h-auto" />
+          </div>
+        );
+      case "audio":
+        return (
+          <div key={index} className="my-6 p-4 bg-white/5 border border-white/10 rounded-lg">
+            <audio src={block.props?.src || block.value} controls className="w-full" />
+          </div>
+        );
+      case "metric":
+        return (
+          <div key={index} className="my-6 p-6 bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg">
+            <p className="text-xs text-muted-foreground font-mono mb-2">{block.props?.label || "Metric"}</p>
+            <p className="text-4xl font-bold text-primary">{block.value}</p>
+            {block.props?.subtitle && <p className="text-xs text-muted-foreground mt-2">{block.props.subtitle}</p>}
+          </div>
+        );
+      case "table":
+        const rows = block.value?.split("|") || [];
+        return (
+          <div key={index} className="my-6 overflow-x-auto border border-white/10 rounded-lg">
+            <table className="w-full text-sm">
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr key={i} className="border-b border-white/10 last:border-0">
+                    {row.split(",").map((cell, j) => (
+                      <td key={j} className="p-3 text-muted-foreground">{cell.trim()}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      case "callout":
+        const severityStyles = {
+          info: "bg-blue-400/10 border-blue-400/30 text-blue-300",
+          warning: "bg-yellow-400/10 border-yellow-400/30 text-yellow-300",
+          error: "bg-red-400/10 border-red-400/30 text-red-300",
+          success: "bg-green-400/10 border-green-400/30 text-green-300"
+        };
+        const severity = block.props?.severity || "info" as keyof typeof severityStyles;
+        return (
+          <div key={index} className={`my-6 p-4 border-l-4 rounded ${severityStyles[severity]}`}>
+            <p className="font-bold text-sm mb-2">{block.props?.title || "Note"}</p>
+            <p className="text-sm">{block.value}</p>
+          </div>
+        );
+      case "embed":
+        return (
+          <div key={index} className="my-6 rounded-lg overflow-hidden border border-white/10">
+            <iframe src={block.props?.src || block.value} width="100%" height={block.props?.height || 400} className="w-full" />
+          </div>
+        );
+      case "json":
+        return (
+          <div key={index} className="bg-black/50 border border-white/10 rounded-lg p-4 my-4 font-mono text-xs overflow-x-auto">
+            <pre className="text-green-400">{JSON.stringify(JSON.parse(block.value || "{}"), null, 2)}</pre>
+          </div>
+        );
+      case "formula":
+        return (
+          <div key={index} className="my-6 p-4 bg-white/5 border border-white/10 rounded-lg font-mono text-sm text-primary">
+            {block.value}
+          </div>
+        );
+      case "markdown":
+        return (
+          <div key={index} className="my-4 text-muted-foreground prose dark" dangerlySetInnerHTML={{ __html: block.value || "" }} />
+        );
+      case "qr-code":
+        return null; // QR codes rendered differently
+      case "tab":
+      case "toggle":
+      case "card-grid":
+      case "timeline":
+      case "chart":
+        return (
+          <div key={index} className="my-6 p-4 bg-white/5 border border-white/10 rounded-lg text-muted-foreground">
+            [{block.type}] {block.value}
+          </div>
+        );
       default:
         return null;
     }
