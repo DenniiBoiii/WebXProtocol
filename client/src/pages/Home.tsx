@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -336,6 +336,140 @@ export default function Home() {
                       Read: Building the Sovereign Internet <ArrowRight className="w-3 h-3" />
                     </Button>
                   </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* No Login Needed Segment */}
+        <div className="border-t border-white/10 pt-12 mb-24 relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Lock className="w-5 h-5 text-green-400" />
+              <span className="text-xs font-mono uppercase tracking-widest text-green-400">Zero Friction Access</span>
+            </div>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">No Login. No Passwords. No Friction.</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Share secure information instantly with one-time links. No accounts. No database. No tracking.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* Left: How It Works */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 h-full">
+                <h3 className="text-xl font-display font-bold mb-6 text-green-400">How It Works</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-400/20 border border-green-400/50">
+                        <span className="text-green-400 font-bold">1</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Create a Blueprint with a JWT Token</p>
+                      <p className="text-xs text-muted-foreground mt-1">Include an expiration time (10 minutes, 1 hour, 1 day) and recipient permissions.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-400/20 border border-green-400/50">
+                        <span className="text-green-400 font-bold">2</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Share the Link Instantly</p>
+                      <p className="text-xs text-muted-foreground mt-1">Send via email, SMS, chat. No signup page. No "Create Account" flow. Just open and view.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-400/20 border border-green-400/50">
+                        <span className="text-green-400 font-bold">3</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Browser Verifies Cryptographically</p>
+                      <p className="text-xs text-muted-foreground mt-1">When they open the link, their browser checks if the token is valid and hasn't expired.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-green-400/20 border border-green-400/50">
+                        <span className="text-green-400 font-bold">4</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">Content Appears. Link Expires.</p>
+                      <p className="text-xs text-muted-foreground mt-1">After expiration, the link returns "Access Denied". No server involved in the verification.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Right: Real Use Cases */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="bg-white/5 border border-white/10 rounded-xl p-8 h-full">
+                <h3 className="text-xl font-display font-bold mb-6 text-green-400">Companies Already Do This</h3>
+                <div className="space-y-6">
+                  <div className="border-l-2 border-green-400/50 pl-4">
+                    <p className="font-semibold text-white">Banks & Financial Institutions</p>
+                    <p className="text-xs text-muted-foreground mt-2">Send account statements, wire transfer confirmations, and transaction history as secure links. One-time access. Expires after 24 hours. Recipient can't forward it after expiration.</p>
+                  </div>
+                  <div className="border-l-2 border-green-400/50 pl-4">
+                    <p className="font-semibold text-white">HR & Payroll</p>
+                    <p className="text-xs text-muted-foreground mt-2">Share offer letters, W2s, and benefits summaries. Each employee gets a unique link. Expires 30 days after sharing. No database of sensitive documents.</p>
+                  </div>
+                  <div className="border-l-2 border-green-400/50 pl-4">
+                    <p className="font-semibold text-white">Healthcare Providers</p>
+                    <p className="text-xs text-muted-foreground mt-2">Share medical records and test results via secure links. HIPAA-compliant. Each link tied to a specific patient. Expires automatically.</p>
+                  </div>
+                  <div className="border-l-2 border-green-400/50 pl-4">
+                    <p className="font-semibold text-white">Legal & Contracts</p>
+                    <p className="text-xs text-muted-foreground mt-2">Send confidential agreements and contracts. Recipient can view but token prevents copying. Perfect for NDAs and sensitive negotiations.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Honesty Box */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-blue-400/10 border border-blue-400/30 rounded-xl p-6">
+              <div className="flex gap-4">
+                <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-bold text-white mb-2">The Honest Truth About Expiration</p>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    WebX is client-side and decentralized. Here's what's real and what needs a server:
+                  </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li><span className="text-green-400">✓ Real:</span> JWT tokens with expiration timestamps. Cryptographically signed so no one can fake them.</li>
+                    <li><span className="text-green-400">✓ Real:</span> Browser verifies the token instantly, client-side. No network call needed.</li>
+                    <li><span className="text-green-400">✓ Real:</span> Revocation lists. Send an API call to mark a token as invalid instantly.</li>
+                    <li><span className="text-orange-400">⚠️ Limited:</span> A determined user with browser dev tools could technically keep a screenshot or copy text before expiration. WebX can't prevent that—nothing can.</li>
+                    <li><span className="text-orange-400">⚠️ Limited:</span> For true "one-time links" (single view), you'd need a server tracking opens. WebX can't do that client-side.</li>
+                    <li><span className="text-green-400">✓ Real:</span> For 99% of use cases (temporary access, automated shares, time-gated content), WebX delivers what you need with zero infrastructure.</li>
+                  </ul>
                 </div>
               </div>
             </div>
