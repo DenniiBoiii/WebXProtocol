@@ -316,22 +316,60 @@ export default function Composer() {
                  </div>
                )}
                
-               <div className="flex items-center space-x-2 mt-4">
-                 <div className="grid flex-1 gap-2">
-                   <Label htmlFor="link" className="sr-only">
-                     Link
-                   </Label>
-                   <Input
-                     id="link"
-                     readOnly
-                     value={generatedLink}
-                     className="bg-white/5 border-white/10 font-mono text-xs h-9"
-                   />
+               <div className="space-y-3 mt-4">
+                 <div>
+                   <Label className="text-xs text-muted-foreground mb-2 block">Full URL Link</Label>
+                   <div className="flex items-center space-x-2">
+                     <div className="grid flex-1 gap-2">
+                       <Input
+                         readOnly
+                         value={generatedLink}
+                         className="bg-white/5 border-white/10 font-mono text-xs h-9"
+                       />
+                     </div>
+                     <Button 
+                       type="submit" 
+                       size="sm" 
+                       className="px-3" 
+                       onClick={() => {
+                         navigator.clipboard.writeText(generatedLink);
+                         setCopied(true);
+                         setTimeout(() => setCopied(false), 2000);
+                         toast({ title: "Copied", description: "Full URL copied to clipboard." });
+                       }}
+                     >
+                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                       <span className="sr-only">Copy</span>
+                     </Button>
+                   </div>
                  </div>
-                 <Button type="submit" size="sm" className="px-3" onClick={handleCopy}>
-                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                   <span className="sr-only">Copy</span>
-                 </Button>
+
+                 <div>
+                   <Label className="text-xs text-muted-foreground mb-2 block">WebX Payload Link</Label>
+                   <div className="flex items-center space-x-2">
+                     <div className="grid flex-1 gap-2">
+                       <Input
+                         readOnly
+                         value={`WebX://${generatedLink.split('payload=')[1] || ''}`}
+                         className="bg-white/5 border-white/10 font-mono text-xs h-9"
+                       />
+                     </div>
+                     <Button 
+                       type="submit" 
+                       size="sm" 
+                       className="px-3" 
+                       onClick={() => {
+                         navigator.clipboard.writeText(`WebX://${generatedLink.split('payload=')[1] || ''}`);
+                         setCopied(true);
+                         setTimeout(() => setCopied(false), 2000);
+                         toast({ title: "Copied", description: "WebX payload link copied to clipboard." });
+                       }}
+                     >
+                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                       <span className="sr-only">Copy</span>
+                     </Button>
+                   </div>
+                 </div>
                </div>
              </DialogContent>
            </Dialog>
