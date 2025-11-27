@@ -123,6 +123,9 @@ export default function Home() {
             <Button size="lg" className="h-12 px-8" onClick={handleLoad}>
               Render <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
+            <p className="text-xs text-muted-foreground mt-3">
+              💡 <span className="text-white/60">Paste WebX:// payloads or full URLs to render. For security, .webx file uploads aren't supported in the browser—but you can edit them in the Composer.</span>
+            </p>
           </motion.div>
 
           <div className="mt-8 flex justify-center gap-4 flex-wrap">
