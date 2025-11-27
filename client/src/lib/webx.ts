@@ -176,6 +176,11 @@ export const WebXBlueprintSchema = z.object({
     prompt: z.string(),
     auto_generate: z.boolean().optional(),
   }).optional(),
+  jwt: z.object({
+    token: z.string(),
+    expiration: z.number(),
+    permissions: z.array(z.string()).optional(),
+  }).optional(),
   meta: z.object({
     version: z.string(),
     author: z.string().optional(),

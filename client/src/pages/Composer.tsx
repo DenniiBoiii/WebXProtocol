@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap, Separator } from "lucide-react";
+import { Plus, Trash2, Eye, Code, Save, ArrowLeft, Copy, Check, Sparkles, Fingerprint, QrCode, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
