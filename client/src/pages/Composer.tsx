@@ -309,7 +309,11 @@ export default function Composer() {
                      <div className="text-center text-sm text-muted-foreground">
                        <p className="mb-2">⚠️ Payload too large for QR code</p>
                        <p className="text-xs">{generatedLink.length} chars (max 2953)</p>
-                       <p className="text-xs mt-2">Enable compression to reduce size</p>
+                       <p className="text-xs mt-3">Options:</p>
+                       <ul className="text-xs mt-2 space-y-1">
+                         <li>• Enable compression to reduce size</li>
+                         <li>• Or download as <span className="font-mono text-primary">.webx</span> file instead</li>
+                       </ul>
                      </div>
                    ) : (
                      <QRCode 
