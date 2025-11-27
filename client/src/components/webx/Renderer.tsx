@@ -961,7 +961,14 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
               <div className="mt-8 flex gap-3 justify-center">
                 <Button 
                   className="bg-primary hover:bg-primary/90 text-white font-semibold"
-                  onClick={() => window.location.href = `/composer?replyTo=${encodeURIComponent(blueprint.title)}`}
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      layout: "postcard",
+                      replyTo: blueprint.title,
+                      replyFrom: blueprint.meta.author || "Unknown",
+                    });
+                    window.location.href = `/composer?${params.toString()}`;
+                  }}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" /> Reply with Postcard
                 </Button>

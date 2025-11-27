@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { WebXBlueprint, ContentBlock, encodeWebX, getPayloadMetrics } from "@/lib/webx";
 import { WebXRenderer } from "@/components/webx/Renderer";
@@ -52,6 +52,33 @@ export default function Composer() {
   const [expireOnFirstView, setExpireOnFirstView] = useState(false);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const [replyContext, setReplyContext] = useState<{ to: string; replyTo: string } | null>(null);
+
+  // Check for reply parameters in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const layout = params.get('layout');
+    const replyTo = params.get('replyTo');
+    const replyFrom = params.get('replyFrom');
+    
+    if (layout === 'postcard' && replyTo && replyFrom) {
+      setReplyContext({ to: replyFrom, replyTo });
+      setBlueprint(prev => ({
+        ...prev,
+        layout: 'postcard' as any,
+        title: `Reply to: ${replyTo}`,
+        data: [
+          { type: "heading", value: "✍️ Your Reply" },
+          { type: "paragraph", value: "" }
+        ],
+        meta: { 
+          ...prev.meta, 
+          to: replyFrom,
+          author: "Me"
+        }
+      }));
+    }
+  }, []);
 
   const handleDownloadWebX = () => {
     const dataStr = JSON.stringify(blueprint, null, 2);
