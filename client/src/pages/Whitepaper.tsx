@@ -671,6 +671,11 @@ export default function Whitepaper() {
                     title: "AI-Generated Content Caching",
                     desc: "Bake AI outputs into links for deterministic sharing",
                     features: ["Frozen content", "Reproducible", "No API calls needed"]
+                  },
+                  {
+                    title: "WebX Services & Content Platforms",
+                    desc: "Servers host .webx files as a catalog (similar to video streaming, photo sharing, or content distribution platforms)",
+                    features: ["CDN distribution", "Search/discovery", "Scalable hosting", ".webx file libraries"]
                   }
                 ].map((usecase, idx) => (
                   <Card key={idx} className="bg-white/5 border-white/10">
@@ -856,6 +861,51 @@ export default function Whitepaper() {
                       <li>✓ Pre-built examples and templates</li>
                       <li>✓ Community-driven addons</li>
                     </ul>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-r from-blue-400/10 to-purple-400/10 border border-blue-400/30">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold mb-4">WebX Services Architecture</h3>
+                    <p className="text-muted-foreground mb-6">
+                      WebX doesn't replace traditional servers—it complements them. Services can host and distribute multiple .webx files, enabling new classes of platforms:
+                    </p>
+                    <div className="space-y-4">
+                      {[
+                        {
+                          service: "Video Content Platforms",
+                          model: "Host .webx files for video metadata, playlists, comments, recommendations"
+                        },
+                        {
+                          service: "Photo Sharing Services",
+                          model: "Distribute image galleries, albums, and media libraries as .webx collections"
+                        },
+                        {
+                          service: "Content Aggregators",
+                          model: "Serve blog posts, articles, and news as individual .webx files with indexing"
+                        },
+                        {
+                          service: "Streaming Platforms",
+                          model: "Catalog available content as searchable .webx files users can stream/download"
+                        },
+                        {
+                          service: "Document Repositories",
+                          model: "Archive and serve unlimited .webx files with version control and search"
+                        },
+                        {
+                          service: "Media Libraries",
+                          model: "Host massive collections without bandwidth limits (files transferred as-is)"
+                        }
+                      ].map((item, idx) => (
+                        <div key={idx} className="bg-white/5 p-4 rounded border border-white/10">
+                          <p className="font-bold text-sm mb-2 text-blue-300">{item.service}</p>
+                          <p className="text-xs text-muted-foreground">{item.model}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-6 italic border-t border-white/10 pt-4">
+                      Key advantage: Servers distribute .webx files via CDN; browsers render them instantly with zero server involvement. Scales infinitely while keeping infrastructure costs low.
+                    </p>
                   </CardContent>
                 </Card>
               </div>
