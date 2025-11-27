@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Composer from "@/pages/Composer";
 import Viewer from "@/pages/Viewer";
 import Implement from "@/pages/Implement";
+import Whitepaper from "@/pages/Whitepaper";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/composer" component={Composer} />
       <Route path="/view" component={Viewer} />
       <Route path="/implement" component={Implement} />
+      <Route path="/whitepaper" component={Whitepaper} />
       <Route component={NotFound} />
     </Switch>
   );
