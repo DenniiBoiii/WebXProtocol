@@ -305,14 +305,22 @@ export default function Composer() {
                {/* QR Code */}
                {showQR && generatedLink && (
                  <div className="flex justify-center mb-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                   <QRCode 
-                     value={generatedLink}
-                     size={180}
-                     level="H"
-                     includeMargin={true}
-                     bgColor="#000000"
-                     fgColor="#00FF00"
-                   />
+                   {generatedLink.length > 2953 ? (
+                     <div className="text-center text-sm text-muted-foreground">
+                       <p className="mb-2">⚠️ Payload too large for QR code</p>
+                       <p className="text-xs">{generatedLink.length} chars (max 2953)</p>
+                       <p className="text-xs mt-2">Enable compression to reduce size</p>
+                     </div>
+                   ) : (
+                     <QRCode 
+                       value={generatedLink}
+                       size={180}
+                       level="H"
+                       includeMargin={true}
+                       bgColor="#000000"
+                       fgColor="#00FF00"
+                     />
+                   )}
                  </div>
                )}
                
