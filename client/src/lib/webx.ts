@@ -161,32 +161,24 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
       ]
   },
   security_guide: {
-      title: "WebX + Authentication: Building the Sovereign Internet",
+      title: "WebX + JWT: The Sovereign Internet",
       layout: "article",
       meta: { version: "1.0", author: "WebX Foundation", created: Date.now(), category: "documentation", featured: true, downloads: 2850 },
       data: [
-          { type: "heading", value: "The Misconception" },
-          { type: "paragraph", value: "Many assume WebX can only deliver public content. This is wrong. WebX can support full authentication and authorization using cryptographic tokens—with minimal server dependency." },
+          { type: "heading", value: "The Truth About WebX & Auth" },
+          { type: "paragraph", value: "WebX can deliver authenticated, gated content using cryptographic JWTs. No constant server calls needed." },
           { type: "divider" },
-          { type: "heading", value: "Why This Matters" },
-          { type: "paragraph", value: "Traditional web apps require constant server contact: login, validate token, fetch data, rinse and repeat. WebX flips this. Users receive self-contained, cryptographically verified blueprints with embedded permissions. The server becomes optional." },
-          { type: "divider" },
-          { type: "heading", value: "JWT: The Missing Piece" },
-          { type: "paragraph", value: "JSON Web Tokens (JWTs) are digitally signed proof of identity. A WebX link can include a JWT, and because JWTs are cryptographically signed, the browser can verify authenticity without calling home." },
-          { type: "code", value: "WebX Link Contents:\n{\n  title: \"Premium Article\",\n  data: [...content...],\n  auth: {\n    token: \"eyJhbGc...\",\n    permissions: [\"read\", \"comment\"],\n    expires: 1735689600\n  }\n}" },
           { type: "heading", value: "How It Works" },
-          { type: "list", value: "User authenticates once (traditional login),Receives a signed JWT token,That token gets embedded in WebX links,Browser verifies the signature (no server needed),Content conditionally renders based on token permissions,Token expiration triggers re-authentication" },
-          { type: "heading", value: "Real-World Use Cases" },
-          { type: "list", value: "Gated Content: Share premium blogs with JWT-verified links,Team Documents: Role-based access in the blueprint itself,Temporary Access: Time-limited shares that auto-expire,Multi-Tenant SaaS: Different content per user, same infrastructure-free link" },
+          { type: "list", value: "User logs in,Gets a signed JWT token,Token embedded in WebX link,Browser verifies signature,Content renders based on permissions" },
+          { type: "heading", value: "Real Use Cases" },
+          { type: "list", value: "Premium gated blogs,Team-only documents,Time-limited access shares,Role-based content" },
           { type: "heading", value: "The Shift" },
-          { type: "paragraph", value: "This isn't replacing passwords. But it fundamentally changes who controls content. Instead of trusting Amazon's servers to keep your data safe, you're trusting cryptography. Instead of waiting for servers to respond, you're waiting for client-side verification (microseconds)." },
-          { type: "heading", value: "What Remains Server-Side" },
-          { type: "list", value: "Initial authentication (login system),Token issuance,Revocation lists (for instant logout),User identity management" },
-          { type: "paragraph", value: "Everything else—rendering, validation, content delivery—happens on the client." },
+          { type: "paragraph", value: "Instead of trusting corporate servers, trust cryptography. Instead of server latency, microsecond client-side verification." },
+          { type: "heading", value: "Server-Side Still Needed For" },
+          { type: "list", value: "Initial login,Token issuance,Revocation lists,User identity" },
           { type: "heading", value: "The Vision" },
-          { type: "quote", value: "A new internet where content is sovereign, identity is cryptographic, and servers are optional." },
-          { type: "paragraph", value: "WebX + JWTs = the closest thing to a truly decentralized web. Not blockchain complexity. Just mathematics and client-side rendering." },
-          { type: "button", value: "Explore More Blueprints", props: { variant: "primary" } }
+          { type: "quote", value: "Content sovereign, identity cryptographic, servers optional." },
+          { type: "button", value: "Build Authenticated Apps", props: { variant: "primary" } }
       ]
   }
 };
