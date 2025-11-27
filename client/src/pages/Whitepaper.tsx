@@ -787,46 +787,110 @@ export default function Whitepaper() {
             >
               <h2 className="text-4xl font-bold mb-6">9. Extensibility & Ecosystem</h2>
               <div className="space-y-6">
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30">
                   <CardContent className="p-8">
-                    <h3 className="text-xl font-bold mb-4">Expanded Content Block Types</h3>
-                    <p className="text-muted-foreground mb-6">
-                      WebX now supports 22+ content block types for modern and future web use cases:
+                    <h3 className="text-2xl font-bold mb-2 text-primary">22+ Content Block Types</h3>
+                    <p className="text-sm text-muted-foreground mb-8">
+                      WebX supports an extensive library of modern content blocks, making it possible to build rich, interactive content without a backend.
                     </p>
-                    <div className="grid md:grid-cols-2 gap-4 mb-6">
-                      <div className="bg-black/30 p-4 rounded border border-white/10">
-                        <p className="font-bold text-primary text-sm mb-3">Core Blocks</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>✓ heading, paragraph, image, list</li>
-                          <li>✓ code, quote, divider, input</li>
-                          <li>✓ button, markdown</li>
-                        </ul>
+
+                    <div className="space-y-6">
+                      {/* Core Content Blocks */}
+                      <div>
+                        <p className="font-bold text-lg text-primary mb-4">📝 Core Content (10 blocks)</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {[
+                            { name: "heading", use: "Section titles (h2 equivalent)", props: "text content only" },
+                            { name: "paragraph", use: "Body text and descriptions", props: "text content only" },
+                            { name: "list", use: "Bullet points & ordered lists", props: "comma-separated items" },
+                            { name: "quote", use: "Blockquotes and testimonials", props: "italic, bordered text" },
+                            { name: "code", use: "Source code blocks with syntax highlight", props: "pre-formatted monospace" },
+                            { name: "divider", use: "Visual separators between sections", props: "horizontal line" },
+                            { name: "input", use: "Text input fields & forms", props: "label, placeholder" },
+                            { name: "button", use: "Clickable CTAs", props: "label, variant (primary/secondary)" },
+                            { name: "image", use: "Photos, diagrams, screenshots", props: "src, alt, width, height" },
+                            { name: "markdown", use: "Full markdown rendering", props: "markdown-formatted text" }
+                          ].map((block, idx) => (
+                            <div key={idx} className="bg-black/40 p-3 rounded border border-white/10">
+                              <p className="font-mono text-sm text-primary">{block.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{block.use}</p>
+                              <p className="text-[11px] text-white/50 mt-1">Props: {block.props}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="bg-black/30 p-4 rounded border border-white/10">
-                        <p className="font-bold text-secondary text-sm mb-3">Media & Streaming</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>✓ video, audio</li>
-                          <li>✓ embed (iframe), qr-code</li>
-                        </ul>
+
+                      {/* Media & Streaming */}
+                      <div>
+                        <p className="font-bold text-lg text-secondary mb-4">🎥 Media & Streaming (4 blocks)</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {[
+                            { name: "video", use: "Video players (mp4, webm, hls streams)", props: "src, width, height, controls" },
+                            { name: "audio", use: "Audio players (mp3, wav, m4a)", props: "src, controls" },
+                            { name: "embed", use: "Embedded iframes (YouTube, Spotify, etc)", props: "src, width, height" },
+                            { name: "qr-code", use: "QR codes for links/data", props: "value, size" }
+                          ].map((block, idx) => (
+                            <div key={idx} className="bg-black/40 p-3 rounded border border-white/10">
+                              <p className="font-mono text-sm text-secondary">{block.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{block.use}</p>
+                              <p className="text-[11px] text-white/50 mt-1">Props: {block.props}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="bg-black/30 p-4 rounded border border-white/10">
-                        <p className="font-bold text-purple-400 text-sm mb-3">Data & Visualization</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>✓ table, metric (KPI display)</li>
-                          <li>✓ chart, json, formula</li>
-                        </ul>
+
+                      {/* Data & Visualization */}
+                      <div>
+                        <p className="font-bold text-lg text-purple-400 mb-4">📊 Data & Visualization (5 blocks)</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {[
+                            { name: "table", use: "Data tables & spreadsheets", props: "rows (pipe-separated), columns" },
+                            { name: "metric", use: "KPI displays & large numbers", props: "value, label, subtitle, unit" },
+                            { name: "chart", use: "Line/bar/pie charts", props: "data, type, title, labels" },
+                            { name: "json", use: "JSON data viewer (pretty-printed)", props: "json object/array" },
+                            { name: "formula", use: "Math equations & formulas", props: "formula text (LaTeX)" }
+                          ].map((block, idx) => (
+                            <div key={idx} className="bg-black/40 p-3 rounded border border-white/10">
+                              <p className="font-mono text-sm text-purple-400">{block.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{block.use}</p>
+                              <p className="text-[11px] text-white/50 mt-1">Props: {block.props}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="bg-black/30 p-4 rounded border border-white/10">
-                        <p className="font-bold text-green-400 text-sm mb-3">Interactive & Layout</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          <li>✓ callout (alerts), card-grid</li>
-                          <li>✓ tab, toggle, timeline</li>
+
+                      {/* Interactive & Layout */}
+                      <div>
+                        <p className="font-bold text-lg text-green-400 mb-4">🎛️ Interactive & Layout (5 blocks)</p>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {[
+                            { name: "callout", use: "Alerts, notices, warnings", props: "title, severity (info/warning/error/success)" },
+                            { name: "card-grid", use: "Grid layouts for cards", props: "columns, gap, items" },
+                            { name: "tab", use: "Tabbed navigation", props: "tabs (array of {label, content})" },
+                            { name: "toggle", use: "Expandable/collapsible sections", props: "title, expanded (boolean)" },
+                            { name: "timeline", use: "Chronological event displays", props: "events (date, title, description)" }
+                          ].map((block, idx) => (
+                            <div key={idx} className="bg-black/40 p-3 rounded border border-white/10">
+                              <p className="font-mono text-sm text-green-400">{block.name}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{block.use}</p>
+                              <p className="text-[11px] text-white/50 mt-1">Props: {block.props}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Why This Matters */}
+                      <div className="border-t border-white/10 pt-6 mt-6">
+                        <p className="font-bold text-white mb-3">Why 22+ Blocks Matter</p>
+                        <ul className="space-y-2 text-sm text-muted-foreground">
+                          <li>✓ <strong>Complete storytelling:</strong> Mix text, data, media seamlessly in one link</li>
+                          <li>✓ <strong>Interactive without backend:</strong> Tables, metrics, forms all work client-side</li>
+                          <li>✓ <strong>Modern content:</strong> Video, audio, and streaming support built-in</li>
+                          <li>✓ <strong>Data-driven:</strong> Visualize metrics, charts, and JSON in URLs</li>
+                          <li>✓ <strong>Future-proof:</strong> Each block is extensible—build custom variants via addons</li>
                         </ul>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground italic border-t border-white/10 pt-4">
-                      Each block type supports flexible props for customization. For example: metrics display KPIs with labels, callouts support info/warning/error/success severity levels, and embeds support custom heights.
-                    </p>
                   </CardContent>
                 </Card>
 
