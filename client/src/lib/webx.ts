@@ -178,7 +178,8 @@ export const WebXBlueprintSchema = z.object({
   }).optional(),
   jwt: z.object({
     token: z.string(),
-    expiration: z.number(),
+    expiration: z.number().optional(),
+    expireOnFirstView: z.boolean().optional(),
     permissions: z.array(z.string()).optional(),
   }).optional(),
   meta: z.object({

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Viewer() {
   const [location, setLocation] = useLocation();
+  const [isExpired, setIsExpired] = useState(false);
   const { toast } = useToast();
   
   // Extract payload from URL query params manually since wouter doesn't parse them automatically
@@ -16,6 +17,28 @@ export default function Viewer() {
   const payload = searchParams.get("payload");
   
   const blueprint = payload ? decodeWebX(payload) : null;
+
+  // Check expiration on mount
+  useEffect(() => {
+    if (!blueprint) return;
+
+    // Check if expired (time-based)
+    if (blueprint.jwt?.expiration && Date.now() > blueprint.jwt.expiration) {
+      setIsExpired(true);
+      return;
+    }
+
+    // Check if expired on first view
+    if (blueprint.jwt?.expireOnFirstView) {
+      const viewedKey = `webx_viewed_${payload}`;
+      if (localStorage.getItem(viewedKey)) {
+        setIsExpired(true);
+        return;
+      }
+      // Mark as viewed for next time
+      localStorage.setItem(viewedKey, Date.now().toString());
+    }
+  }, [blueprint, payload]);
 
   const handleCopyLink = () => {
       navigator.clipboard.writeText(window.location.href);
@@ -51,6 +74,26 @@ export default function Viewer() {
           <AlertTitle>Invalid Payload</AlertTitle>
           <AlertDescription>
             The WebX payload could not be decoded. It may be corrupted or invalid.
+             <br />
+            <Button variant="link" className="px-0 text-foreground mt-2" onClick={() => setLocation("/")}>
+               Return Home
+            </Button>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-background">
+        <Alert variant="destructive" className="max-w-md border-destructive/50 bg-destructive/10 text-destructive-foreground">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Access Denied</AlertTitle>
+          <AlertDescription>
+            {blueprint.jwt?.expireOnFirstView 
+              ? "This link has already been viewed and has expired (one-time use)."
+              : "This link has expired and is no longer available."}
              <br />
             <Button variant="link" className="px-0 text-foreground mt-2" onClick={() => setLocation("/")}>
                Return Home

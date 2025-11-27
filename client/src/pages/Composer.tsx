@@ -49,6 +49,7 @@ export default function Composer() {
   const [useCompression, setUseCompression] = useState(false);
   const [showQR, setShowQR] = useState(true);
   const [expirationMinutes, setExpirationMinutes] = useState<number | null>(null);
+  const [expireOnFirstView, setExpireOnFirstView] = useState(false);
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
   
@@ -131,15 +132,23 @@ export default function Composer() {
       let blueprintToEncode = blueprint;
       
       // Add expiration to blueprint if set
-      if (expirationMinutes !== null) {
-        const expirationTime = Date.now() + (expirationMinutes * 60 * 1000);
+      if (expirationMinutes !== null || expireOnFirstView) {
+        const jwtData: any = {
+          token: "demo_token_" + Math.random().toString(36).slice(2, 11),
+          permissions: ["read"]
+        };
+        
+        if (expirationMinutes !== null) {
+          jwtData.expiration = Date.now() + (expirationMinutes * 60 * 1000);
+        }
+        
+        if (expireOnFirstView) {
+          jwtData.expireOnFirstView = true;
+        }
+        
         blueprintToEncode = {
           ...blueprint,
-          jwt: {
-            token: "demo_token_" + Math.random().toString(36).slice(2, 11),
-            expiration: expirationTime,
-            permissions: ["read"]
-          }
+          jwt: jwtData
         };
       }
       
@@ -313,7 +322,10 @@ export default function Composer() {
                       </Label>
                       <Select 
                           value={expirationMinutes?.toString() || "never"}
-                          onValueChange={(v) => setExpirationMinutes(v === "never" ? null : parseInt(v))}
+                          onValueChange={(v) => {
+                            setExpirationMinutes(v === "never" ? null : parseInt(v));
+                            setExpireOnFirstView(false);
+                          }}
                       >
                           <SelectTrigger className="bg-white/5 border-white/10">
                               <SelectValue />
@@ -332,8 +344,31 @@ export default function Composer() {
                           Link expires in {expirationMinutes} minute{expirationMinutes > 1 ? 's' : ''} ({new Date(Date.now() + expirationMinutes * 60 * 1000).toLocaleString()})
                         </p>
                       )}
+                      
+                      {/* Expire on First View */}
+                      <div className="flex items-center gap-3 mt-4 pt-4 border-t border-green-400/20">
+                        <input
+                          type="checkbox"
+                          id="expireOnFirstView"
+                          checked={expireOnFirstView}
+                          onChange={(e) => {
+                            setExpireOnFirstView(e.target.checked);
+                            if (e.target.checked) setExpirationMinutes(null);
+                          }}
+                          className="w-4 h-4 rounded cursor-pointer"
+                        />
+                        <label htmlFor="expireOnFirstView" className="text-sm cursor-pointer">
+                          <p className="font-semibold text-white">Expire After First Opening</p>
+                          <p className="text-xs text-muted-foreground">Link becomes invalid after the first view</p>
+                        </label>
+                      </div>
+                      
                       <p className="text-xs text-muted-foreground">
-                          Embed an expiration timestamp in the blueprint. Recipients will see "Access Denied" after expiration.
+                          {expireOnFirstView 
+                            ? "Link can only be viewed once. Perfect for one-time sharing or sensitive content." 
+                            : expirationMinutes 
+                            ? "Link expires at a specific time." 
+                            : "Embed an expiration rule in the blueprint. Recipients will see 'Access Denied' when expired."}
                       </p>
                   </div>
 
