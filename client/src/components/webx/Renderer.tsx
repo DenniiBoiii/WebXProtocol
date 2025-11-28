@@ -848,7 +848,7 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
 
       case "postcard": {
         return (
-          <div className="min-h-screen bg-gradient-to-br from-amber-900/30 via-background to-yellow-900/20 p-6 flex items-center justify-center" 
+          <div className="min-h-screen bg-gradient-to-br from-amber-900/30 via-background to-yellow-900/20 p-3 md:p-6 flex items-center justify-center" 
                style={{
                  backgroundImage: "radial-gradient(circle at 20% 50%, rgba(217, 119, 6, 0.1) 0%, transparent 50%)",
                }}>
@@ -862,7 +862,7 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
               }}
             >
               {/* Vintage Postcard */}
-              <div className="relative" style={{ aspectRatio: "6/4" }}>
+              <div className="relative w-full" style={{ aspectRatio: "6/4", minHeight: "300px", maxHeight: "600px" }}>
                 {/* Main postcard card */}
                 <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 rounded-sm border border-amber-800/30 shadow-2xl overflow-hidden group flex">
                   {/* Aged paper texture */}
@@ -873,26 +873,26 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                        }}
                   />
                   
-                  <div className="relative z-10 w-full h-full flex">
+                  <div className="relative z-10 w-full h-full flex overflow-hidden">
                     {/* LEFT SIDE - Message Area (2/3) */}
-                    <div className="w-2/3 p-8 flex flex-col justify-start">
+                    <div className="w-2/3 p-3 md:p-6 lg:p-8 flex flex-col justify-start overflow-y-auto">
                       {/* Postcard label */}
-                      <p className="text-xs font-mono text-amber-900/50 tracking-widest mb-6">POSTCARD</p>
+                      <p className="text-[10px] md:text-xs font-mono text-amber-900/50 tracking-widest mb-3 md:mb-6 flex-shrink-0">POSTCARD</p>
                       
                       {/* Message lines/content */}
-                      <div className="space-y-4 flex-1">
+                      <div className="space-y-2 md:space-y-4 flex-1 overflow-y-auto">
                         {blueprint.data.length > 0 ? (
                           blueprint.data.map((block, idx) => (
                             <div key={idx} className="space-y-1">
                               {block.type === "heading" && (
                                 <div>
-                                  <p className="font-serif font-bold text-amber-900 text-sm mb-2">{block.value}</p>
+                                  <p className="font-serif font-bold text-amber-900 text-xs md:text-sm mb-1 md:mb-2 break-words">{block.value}</p>
                                   <div className="border-b border-dotted border-amber-800/30" />
                                 </div>
                               )}
                               {block.type === "paragraph" && (
                                 <div className="relative">
-                                  <p className="font-serif text-amber-900/80 text-xs leading-relaxed mb-3">{block.value}</p>
+                                  <p className="font-serif text-amber-900/80 text-[11px] md:text-xs leading-relaxed mb-2 md:mb-3 break-words whitespace-pre-wrap">{block.value}</p>
                                   <div className="border-b border-dotted border-amber-800/30" />
                                 </div>
                               )}
@@ -900,11 +900,10 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                           ))
                         ) : (
                           <>
-                            <div className="border-b border-dotted border-amber-800/30 h-6" />
-                            <div className="border-b border-dotted border-amber-800/30 h-6" />
-                            <div className="border-b border-dotted border-amber-800/30 h-6" />
-                            <div className="border-b border-dotted border-amber-800/30 h-6" />
-                            <div className="border-b border-dotted border-amber-800/30 h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-4 md:h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-4 md:h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-4 md:h-6" />
+                            <div className="border-b border-dotted border-amber-800/30 h-4 md:h-6" />
                           </>
                         )}
                       </div>
@@ -914,35 +913,35 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                     <div className="w-px bg-amber-800/40" />
 
                     {/* RIGHT SIDE - Address Area (1/3) */}
-                    <div className="w-1/3 p-8 flex flex-col justify-between relative">
+                    <div className="w-1/3 p-3 md:p-6 lg:p-8 flex flex-col justify-between relative">
                       {/* Postage Stamp */}
                       <motion.div
                         animate={{ rotate: [-3, 3, -3] }}
                         transition={{ duration: 4, repeat: Infinity }}
-                        className="absolute top-4 right-4 w-14 h-16 bg-gradient-to-br from-red-300 to-red-500 border-2 border-dashed border-red-700 rounded-sm flex items-center justify-center shadow-md"
+                        className="absolute top-2 right-2 md:top-4 md:right-4 w-10 h-12 md:w-14 md:h-16 bg-gradient-to-br from-red-300 to-red-500 border-2 border-dashed border-red-700 rounded-sm flex items-center justify-center shadow-md flex-shrink-0"
                       >
-                        <span className="text-xl">✉️</span>
+                        <span className="text-lg md:text-xl">✉️</span>
                       </motion.div>
 
                       {/* Address Fields */}
-                      <div className="space-y-6 mt-8">
+                      <div className="space-y-3 md:space-y-6 mt-6 md:mt-8 overflow-y-auto">
                         {/* To: */}
                         <div>
-                          <p className="text-xs font-serif text-amber-900/60 mb-1 tracking-wide">to:</p>
-                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
-                            {(blueprint.meta as any).to && <p className="font-serif text-amber-900 text-xs">{(blueprint.meta as any).to}</p>}
+                          <p className="text-[10px] md:text-xs font-serif text-amber-900/60 mb-1 tracking-wide">to:</p>
+                          <div className="border-b border-dotted border-amber-800/40 py-1 md:py-2 min-h-5 md:min-h-6">
+                            {(blueprint.meta as any).to && <p className="font-serif text-amber-900 text-[10px] md:text-xs break-words">{(blueprint.meta as any).to}</p>}
                           </div>
-                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6" />
+                          <div className="border-b border-dotted border-amber-800/40 py-1 md:py-2 min-h-5 md:min-h-6" />
                         </div>
 
                         {/* From: */}
                         <div>
-                          <p className="text-xs font-serif text-amber-900/60 mb-1 tracking-wide">from:</p>
-                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
-                            <p className="font-serif text-amber-900 text-xs">{blueprint.meta.author}</p>
+                          <p className="text-[10px] md:text-xs font-serif text-amber-900/60 mb-1 tracking-wide">from:</p>
+                          <div className="border-b border-dotted border-amber-800/40 py-1 md:py-2 min-h-5 md:min-h-6">
+                            <p className="font-serif text-amber-900 text-[10px] md:text-xs break-words">{blueprint.meta.author}</p>
                           </div>
-                          <div className="border-b border-dotted border-amber-800/40 py-2 min-h-6">
-                            <p className="font-serif text-amber-800/60 text-xs">{new Date(blueprint.meta.created).toLocaleDateString()}</p>
+                          <div className="border-b border-dotted border-amber-800/40 py-1 md:py-2 min-h-5 md:min-h-6">
+                            <p className="font-serif text-amber-800/60 text-[10px] md:text-xs">{new Date(blueprint.meta.created).toLocaleDateString()}</p>
                           </div>
                         </div>
                       </div>
@@ -950,10 +949,10 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                   </div>
 
                   {/* Vintage corner marks */}
-                  <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-amber-800/25" />
-                  <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-amber-800/25" />
-                  <div className="absolute bottom-2 left-2 w-3 h-3 border-b-2 border-l-2 border-amber-800/25" />
-                  <div className="absolute bottom-2 right-2 w-3 h-3 border-b-2 border-r-2 border-amber-800/25" />
+                  <div className="absolute top-2 left-2 w-2 h-2 md:w-3 md:h-3 border-t-2 border-l-2 border-amber-800/25" />
+                  <div className="absolute top-2 right-2 w-2 h-2 md:w-3 md:h-3 border-t-2 border-r-2 border-amber-800/25" />
+                  <div className="absolute bottom-2 left-2 w-2 h-2 md:w-3 md:h-3 border-b-2 border-l-2 border-amber-800/25" />
+                  <div className="absolute bottom-2 right-2 w-2 h-2 md:w-3 md:h-3 border-b-2 border-r-2 border-amber-800/25" />
                 </div>
               </div>
 
