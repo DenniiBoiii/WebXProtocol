@@ -2,15 +2,13 @@ import { ArrowRight, Download, Copy, Check, FileDown } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 export default function Whitepaper() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
-  const whitepapeRef = useRef<HTMLDivElement>(null);
 
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
@@ -18,20 +16,9 @@ export default function Whitepaper() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const downloadAsPDF = async () => {
-    if (!whitepapeRef.current) return;
-    
+  const downloadAsPDF = () => {
     setIsDownloadingPDF(true);
     try {
-      const element = whitepapeRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: "#0a0a0a",
-        allowTaint: true,
-        useCORS: true,
-      });
-      
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -39,26 +26,81 @@ export default function Whitepaper() {
       });
       
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 15;
+      const lineHeight = 7;
+      let yPosition = margin;
       
-      let heightLeft = imgHeight;
-      let position = 10;
+      // Title
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("WebX Protocol Whitepaper", margin, yPosition);
+      yPosition += 12;
       
-      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight - 20;
+      // Subtitle
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      const subtitle = "A Serverless Web Protocol for Self-Contained, Immutable, Shareable Content";
+      pdf.text(subtitle, margin, yPosition);
+      yPosition += 20;
       
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight - 20;
+      // Content
+      pdf.setFontSize(10);
+      const sections = [
+        { title: "Abstract", content: "WebX is a serverless web protocol that enables complete web applications and content to be encoded directly into URLs and distributed as portable .webx files. This whitepaper describes the technical architecture, compression techniques, security model, and implementation roadmap." },
+        { title: "Key Features", content: "• Extreme Compression: 60-75% size reduction through base62 encoding and semantic compression\n• Multiple Sharing Formats: Share as URL links or export as .webx files\n• Zero Infrastructure: No servers required for basic functionality\n• Encryption Support: JWT-based authentication and cryptographic verification\n• Censorship Resistance: Portable .webx files work offline and evade ISP filtering\n• AI Integration: Embed AI prompts for dynamic content generation" },
+        { title: "Technical Architecture", content: "WebX blueprints contain complete page definitions encoded in a compact format. Content blocks support 22+ types including headings, paragraphs, images, videos, forms, and more. Layouts include article, card, postcard, minimal, and newsfeed.\n\nData compression uses string deduplication, semantic key minification, and base62 encoding for maximum efficiency." },
+        { title: "Security Model", content: "WebX supports JWT tokens for expiration and authentication. Blueprints can include time-based expiration, one-time-use flags, and cryptographic verification. Content hashes ensure integrity, preventing unauthorized modifications." },
+        { title: "Use Cases", content: "• Ephemeral sharing: One-time links that expire after viewing\n• Offline collaboration: Share .webx files via email without server dependency\n• Censorship resistance: Distribute content as portable files\n• Instant publishing: Generate and share full applications in seconds\n• Archival: Long-term content preservation without domain dependency" },
+        { title: "Distribution Formats", content: "URLs: For instant sharing and real-time collaboration. Perfect for social media and quick distribution.\n\n.webx Files: For offline sharing, email attachments, and censored regions. Portable and doesn't depend on domain availability." },
+      ];
+      
+      sections.forEach(section => {
+        // Check if we need a new page
+        if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+        
+        // Section title
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.text(section.title, margin, yPosition);
+        yPosition += 8;
+        
+        // Section content
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        const wrappedText = pdf.splitTextToSize(section.content, pageWidth - 2 * margin);
+        wrappedText.forEach((line: string) => {
+          if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            yPosition = margin;
+          }
+          pdf.text(line, margin, yPosition);
+          yPosition += lineHeight;
+        });
+        
+        yPosition += 5;
+      });
+      
+      // Footer
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(
+          `Page ${i} of ${totalPages}`,
+          pageWidth / 2,
+          pdf.internal.pageSize.getHeight() - 8,
+          { align: "center" }
+        );
       }
       
       pdf.save(`WebX-Whitepaper-${Date.now()}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
     } finally {
       setIsDownloadingPDF(false);
     }
@@ -117,7 +159,7 @@ export default function Whitepaper() {
         <div className="absolute bottom-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-secondary/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10" ref={whitepapeRef}>
+      <div className="relative z-10">
         {/* Header */}
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <motion.div
