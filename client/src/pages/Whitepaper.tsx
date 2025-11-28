@@ -1,17 +1,67 @@
-import { ArrowRight, Download, Copy, Check } from "lucide-react";
+import { ArrowRight, Download, Copy, Check, FileDown } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function Whitepaper() {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  const whitepapeRef = useRef<HTMLDivElement>(null);
 
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const downloadAsPDF = async () => {
+    if (!whitepapeRef.current) return;
+    
+    setIsDownloadingPDF(true);
+    try {
+      const element = whitepapeRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: "#0a0a0a",
+        allowTaint: true,
+        useCORS: true,
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10;
+      
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight - 20;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight - 20;
+      }
+      
+      pdf.save(`WebX-Whitepaper-${Date.now()}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setIsDownloadingPDF(false);
+    }
   };
 
   const downloadAsWebX = () => {
@@ -67,7 +117,7 @@ export default function Whitepaper() {
         <div className="absolute bottom-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-secondary/10 rounded-full blur-[100px]" />
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10" ref={whitepapeRef}>
         {/* Header */}
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24">
           <motion.div
@@ -1414,6 +1464,15 @@ export default function Whitepaper() {
                 onClick={downloadAsWebX}
               >
                 <Download className="w-4 h-4" /> Download as .webx
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="gap-2"
+                onClick={downloadAsPDF}
+                disabled={isDownloadingPDF}
+              >
+                <FileDown className="w-4 h-4" /> {isDownloadingPDF ? "Generating..." : "Download as PDF"}
               </Button>
             </div>
           </motion.div>
