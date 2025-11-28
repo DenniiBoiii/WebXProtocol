@@ -487,6 +487,99 @@ export default function Home() {
           </motion.div>
         </div>
 
+        {/* .webx Format Section */}
+        <div className="border-t border-white/10 pt-12 mb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Code className="w-5 h-5 text-amber-400" />
+              <span className="text-xs font-mono uppercase tracking-widest text-amber-400">.webx File Format</span>
+            </div>
+            <h2 className="text-4xl font-display font-bold text-white mb-4">Beyond URLs: The .webx Format</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              WebX blueprints can be exported as portable .webx files—opening new possibilities for how we share and archive content.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {[
+              {
+                icon: <Share2 className="w-6 h-6 text-amber-400" />,
+                title: "Email & Offline Sharing",
+                desc: "Attach .webx files to emails. Recipients can open them locally without internet. Perfect for offline-first collaboration and air-gapped systems."
+              },
+              {
+                icon: <Lock className="w-6 h-6 text-amber-400" />,
+                title: "Censorship Resistance",
+                desc: "Distribute content through files instead of URLs. Resistant to link blocking, ISP filtering, and domain seizures. Critical for journalists and activists."
+              },
+              {
+                icon: <Database className="w-6 h-6 text-amber-400" />,
+                title: "Archive & Preserve",
+                desc: "Store important content as portable files. No dependency on URLs, servers, or domain names. Content stays accessible for decades."
+              }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="bg-amber-400/5 border border-amber-400/30 rounded-lg p-6 h-full hover:border-amber-400/50 transition-all">
+                  <div className="mb-4 p-3 bg-amber-400/10 rounded-lg w-fit">{feature.icon}</div>
+                  <h3 className="text-lg font-display font-bold mb-2 text-amber-50">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* The Realistic Take */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-8">
+              <div className="flex gap-4">
+                <Info className="w-5 h-5 text-amber-400 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="font-bold text-white mb-4">When to Use .webx Files vs URLs</p>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <p className="font-semibold text-amber-200 mb-1">Use .webx Files When:</p>
+                      <ul className="space-y-1 text-muted-foreground ml-4">
+                        <li>✓ Sharing via email or messaging apps (no URL expiration risk)</li>
+                        <li>✓ Operating in censored regions or restricted networks</li>
+                        <li>✓ Creating long-term archives that shouldn't rely on domain names</li>
+                        <li>✓ Offline-first workflows (research, journalism, humanitarian work)</li>
+                        <li>✓ Distributing to users without internet access</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-blue-200 mb-1">Use URLs When:</p>
+                      <ul className="space-y-1 text-muted-foreground ml-4">
+                        <li>✓ Quick social sharing (Twitter, Reddit, messaging)</li>
+                        <li>✓ Real-time collaboration and updates</li>
+                        <li>✓ Analytics and tracking user engagement</li>
+                        <li>✓ One-time shares that expire (security-sensitive)</li>
+                      </ul>
+                    </div>
+                    <p className="text-muted-foreground text-xs italic pt-2 border-t border-amber-400/20">
+                      The beauty of WebX: you get to choose. Export as .webx when you need portability. Share as URL when you need speed. Same protocol, different delivery.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
         {/* Use Cases: Live Examples */}
         <div className="border-t border-white/10 pt-12 mb-24 relative">
           <motion.div
