@@ -26,73 +26,119 @@ export default function Whitepaper() {
       });
       
       const pageWidth = pdf.internal.pageSize.getWidth();
-      const margin = 15;
-      const lineHeight = 7;
+      const margin = 12;
+      const contentWidth = pageWidth - 2 * margin;
       let yPosition = margin;
       
-      // Title
-      pdf.setFontSize(24);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("WebX Protocol Whitepaper", margin, yPosition);
-      yPosition += 12;
-      
-      // Subtitle
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "normal");
-      const subtitle = "A Serverless Web Protocol for Self-Contained, Immutable, Shareable Content";
-      pdf.text(subtitle, margin, yPosition);
-      yPosition += 20;
-      
-      // Content
-      pdf.setFontSize(10);
-      const sections = [
-        { title: "Abstract", content: "WebX is a serverless web protocol that enables complete web applications and content to be encoded directly into URLs and distributed as portable .webx files. This whitepaper describes the technical architecture, compression techniques, security model, and implementation roadmap." },
-        { title: "Key Features", content: "• Extreme Compression: 60-75% size reduction through base62 encoding and semantic compression\n• Multiple Sharing Formats: Share as URL links or export as .webx files\n• Zero Infrastructure: No servers required for basic functionality\n• Encryption Support: JWT-based authentication and cryptographic verification\n• Censorship Resistance: Portable .webx files work offline and evade ISP filtering\n• AI Integration: Embed AI prompts for dynamic content generation" },
-        { title: "Technical Architecture", content: "WebX blueprints contain complete page definitions encoded in a compact format. Content blocks support 22+ types including headings, paragraphs, images, videos, forms, and more. Layouts include article, card, postcard, minimal, and newsfeed.\n\nData compression uses string deduplication, semantic key minification, and base62 encoding for maximum efficiency." },
-        { title: "Security Model", content: "WebX supports JWT tokens for expiration and authentication. Blueprints can include time-based expiration, one-time-use flags, and cryptographic verification. Content hashes ensure integrity, preventing unauthorized modifications." },
-        { title: "Use Cases", content: "• Ephemeral sharing: One-time links that expire after viewing\n• Offline collaboration: Share .webx files via email without server dependency\n• Censorship resistance: Distribute content as portable files\n• Instant publishing: Generate and share full applications in seconds\n• Archival: Long-term content preservation without domain dependency" },
-        { title: "Distribution Formats", content: "URLs: For instant sharing and real-time collaboration. Perfect for social media and quick distribution.\n\n.webx Files: For offline sharing, email attachments, and censored regions. Portable and doesn't depend on domain availability." },
-      ];
-      
-      sections.forEach(section => {
-        // Check if we need a new page
-        if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+      const addText = (text: string, fontSize: number, isBold: boolean, isNewPage = false) => {
+        if (isNewPage) {
           pdf.addPage();
           yPosition = margin;
         }
-        
-        // Section title
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(12);
-        pdf.text(section.title, margin, yPosition);
-        yPosition += 8;
-        
-        // Section content
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(10);
-        const wrappedText = pdf.splitTextToSize(section.content, pageWidth - 2 * margin);
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        const wrappedText = pdf.splitTextToSize(text, contentWidth);
         wrappedText.forEach((line: string) => {
-          if (yPosition > pdf.internal.pageSize.getHeight() - margin) {
+          if (yPosition > pdf.internal.pageSize.getHeight() - margin - 5) {
             pdf.addPage();
             yPosition = margin;
           }
           pdf.text(line, margin, yPosition);
-          yPosition += lineHeight;
+          yPosition += fontSize === 10 ? 5.5 : fontSize === 14 ? 7 : 6;
         });
-        
-        yPosition += 5;
+      };
+      
+      // Title Page
+      pdf.setFontSize(28);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("WebX Protocol", margin, yPosition);
+      yPosition += 12;
+      pdf.text("Whitepaper", margin, yPosition);
+      yPosition += 20;
+      
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      const subtitle = "A Serverless Web Protocol for Self-Contained, Immutable, Shareable Content Using URL-Encoded Blueprints";
+      const subtitleWrapped = pdf.splitTextToSize(subtitle, contentWidth);
+      subtitleWrapped.forEach((line: string) => {
+        pdf.text(line, margin, yPosition);
+        yPosition += 6;
       });
       
-      // Footer
-      const totalPages = pdf.internal.pages.length - 1;
+      yPosition += 15;
+      addText("Version 1.0", 10, false);
+      addText(`Published: ${new Date().toLocaleDateString()}`, 10, false);
+      
+      // Abstract
+      yPosition += 10;
+      addText("1. ABSTRACT", 14, true);
+      yPosition += 3;
+      addText("WebX is a serverless web protocol that enables self-contained, immutable, and shareable digital content through URL-encoded JSON blueprints. By combining semantic minification, string deduplication, base62 encoding, and optional gzip compression, WebX achieves 60-75% payload reduction. This allows complete web pages, forms, documents, and applications to be encoded as clickable links.\n\nThe protocol is designed for censorship resistance, offline accessibility, one-time sharing, and decentralized distribution. WebX supports JWT-based authentication, content expiration, and is extensible through custom layouts, compression algorithms, and renderers.", 10, false);
+      
+      // Core Principles
+      yPosition += 8;
+      addText("2. CORE PRINCIPLES", 14, true);
+      yPosition += 3;
+      addText("Serverless: Content is self-contained; no infrastructure required\nImmutable: URLs encode content; content cannot change after sharing\nDecentralized: Links work offline, on Tor, on mesh networks, or any platform\nExtensible: Protocol supports custom layouts, compression, and renderers\nSecure: Optional JWT authentication with expiration and one-time access\nCensorship-Resistant: Complete, downloadable package works without internet", 10, false);
+      
+      // Problem Statement
+      yPosition += 8;
+      addText("3. PROBLEM STATEMENT", 14, true);
+      yPosition += 3;
+      addText("Link Rot: Millions of URLs break when services shut down. WebX links remain valid indefinitely.\n\nCensorship: Users cannot access external resources in restricted networks. WebX enables offline-first applications.\n\nData Portability: Users are locked into platforms. WebX treats URLs as portable data formats.\n\nInfrastructure Burden: Hosting scales with users. WebX shifts computation to clients.\n\nOne-Time Sharing: Sensitive information cannot truly self-destruct. WebX supports protocol-level expiration.\n\nURL Limitations: WebX compression enables much richer content than traditional URL encoding.", 10, false);
+      
+      // Technical Architecture
+      yPosition += 8;
+      addText("4. TECHNICAL ARCHITECTURE", 14, true);
+      yPosition += 3;
+      addText("A WebX blueprint is a JSON object containing:\n• Layout type (article, card, postcard, minimal, newsfeed, etc.)\n• Content blocks (22+ types: heading, paragraph, image, video, form, etc.)\n• Optional AI generation rules for dynamic content\n• Optional JWT authentication metadata\n• Page metadata (author, creation date, category)\n\nContent blocks are rendered differently based on layout type. The rendering pipeline: extract payload → base62 decode → decompress (if needed) → verify JWT → check expiration → render content.", 10, false);
+      
+      // Data Encoding
+      yPosition += 8;
+      addText("5. DATA ENCODING & COMPRESSION", 14, true);
+      yPosition += 3;
+      addText("WebX achieves 60-75% compression through:\n\n• Semantic Key Minification: Blueprint keys are shortened (title→t, layout→l, data→d)\n• String Deduplication: Common strings stored once in dictionary, referenced by ID\n• Base62 Encoding: 62 characters (0-9, a-z, A-Z) vs base64's 64, saves padding\n• Optional Gzip: Additional compression for large payloads\n\nExample: A typical 4KB JSON blueprint compresses to 800-1200 characters.", 10, false);
+      
+      // Security
+      yPosition += 8;
+      addText("6. SECURITY & AUTHENTICATION", 14, true);
+      yPosition += 3;
+      addText("JWT Integration: Blueprints can include cryptographically signed tokens with:\n• Expiration timestamps (time-based access)\n• One-time-use flags (revoked after first view)\n• Permission roles (read, edit, admin)\n• Content hash verification (ensures integrity)\n\nClient-Side Verification: Browsers verify tokens without server calls. No central authority needed for basic expiration checks.", 10, false);
+      
+      // Use Cases
+      yPosition += 8;
+      addText("7. USE CASES & APPLICATIONS", 14, true);
+      yPosition += 3;
+      addText("Ephemeral Sharing: One-time links that expire after viewing\nOffline Collaboration: Share .webx files via email without server dependency\nCensorship Resistance: Distribute content as portable files\nInstant Publishing: Generate and share full applications in seconds\nArchival: Long-term content preservation without domain dependency\nAI-Generated Content: Embed AI prompts to generate pages on-the-fly\nSocial Media: Share complex interactive content as URLs", 10, false);
+      
+      // Distribution
+      yPosition += 8;
+      addText("8. DISTRIBUTION FORMATS", 14, true);
+      yPosition += 3;
+      addText("URLs: For instant sharing and real-time collaboration. Perfect for social media and quick distribution.\n\n.webx Files: For offline sharing, email attachments, and censored regions. Portable and doesn't depend on domain availability.\n\nQR Codes: Encode WebX payloads as QR codes for physical distribution.\n\nThe beauty of WebX: you choose the distribution method. Same protocol, different delivery.", 10, false);
+      
+      // Future Roadmap
+      yPosition += 8;
+      addText("9. IMPLEMENTATION ROADMAP", 14, true);
+      yPosition += 3;
+      addText("Phase 1 (Current): Core protocol, compression, basic layouts\nPhase 2: Extended layouts, AI integration, postcard format\nPhase 3: WebRTC signaling layer for decentralized communication\nPhase 4: Mesh network support, Tor integration\nPhase 5: Protocol standardization, multi-client implementations\n\nContribution Welcome: WebX is open for community implementation and extension.", 10, false);
+      
+      // Conclusion
+      yPosition += 8;
+      addText("10. CONCLUSION", 14, true);
+      yPosition += 3;
+      addText("WebX represents a fundamental shift in how we think about URLs and content distribution. By embedding complete applications in links, we enable a more resilient, censorship-resistant, and user-controlled internet.\n\nThis is not a replacement for traditional web infrastructure. Rather, it's a complementary protocol that expands what's possible when infrastructure is optional.\n\nThe future of the internet is serverless. The future is WebX.", 10, false);
+      
+      // Add page numbers
+      const totalPages = (pdf as any).internal.pages.length - 1;
       for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
+        (pdf as any).setPage(i);
         pdf.setFontSize(8);
         pdf.setFont("helvetica", "normal");
         pdf.text(
-          `Page ${i} of ${totalPages}`,
+          `Page ${i} of ${totalPages} | WebX Protocol Whitepaper v1.0`,
           pageWidth / 2,
-          pdf.internal.pageSize.getHeight() - 8,
+          pdf.internal.pageSize.getHeight() - 5,
           { align: "center" }
         );
       }
