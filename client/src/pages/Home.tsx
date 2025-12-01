@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info, Check } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info, Check, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -161,10 +161,16 @@ export default function Home() {
             💡 <span className="text-white/60">Paste WebX:// payloads or full URLs to render. For security, .webx file uploads aren't supported in the browser—but you can edit them in the Composer.</span>
           </p>
 
+          {/* Navigation Cards */}
           <div className="mt-8 flex justify-center gap-4 flex-wrap">
              <Link href="/composer">
                 <Button variant="outline" className="border-white/10 hover:bg-white/5">
                    <Code className="mr-2 w-4 h-4" /> Open Composer
+                </Button>
+             </Link>
+             <Link href="/signal">
+                <Button className="bg-green-600 hover:bg-green-700 text-white border-none shadow-[0_0_20px_rgba(22,163,74,0.3)]">
+                   <Video className="mr-2 w-4 h-4" /> WebX Signal (Video)
                 </Button>
              </Link>
              <Link href="/whitepaper">
