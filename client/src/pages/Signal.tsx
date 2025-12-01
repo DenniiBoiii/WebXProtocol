@@ -15,12 +15,27 @@ import {
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
-// WebRTC configuration for STUN servers
+// WebRTC configuration with STUN and free TURN servers for better connectivity
 const rtcConfig: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-  ]
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+    // Free TURN servers from OpenRelay
+    {
+      urls: 'turn:openrelay.metered.ca:80',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    {
+      urls: 'turn:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    }
+  ],
+  iceCandidatePoolSize: 10
 };
 
 // Generate unique room ID
@@ -74,37 +89,34 @@ export default function Signal() {
     roomIdRef.current = roomId;
   }, [role, step, roomId]);
 
-  // Check for WebX offer in URL (joining via shared link)
+  // Check for WebX call invite in URL (joining via shared link)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const offerPayload = params.get('offer');
+    const callPayload = params.get('call');
     
-    if (offerPayload && !roomId && wsConnected) {
-      // Decode the WebX blueprint to extract room ID and SDP
-      const blueprint = decodeWebX(offerPayload);
+    if (callPayload && !roomId && wsConnected) {
+      // Decode the WebX blueprint to extract room ID
+      const blueprint = decodeWebX(callPayload);
       if (blueprint && blueprint.data) {
         const jsonBlock = blueprint.data.find((block: any) => block.type === 'json');
         if (jsonBlock && jsonBlock.value) {
           try {
             const signalData = JSON.parse(jsonBlock.value as string);
-            if (signalData.roomId && signalData.sdp) {
-              addLog(`Decoded WebX offer for room: ${signalData.roomId}`);
-              setRoomId(signalData.roomId);
+            if (signalData.room) {
+              addLog(`Decoded WebX call invite for room: ${signalData.room}`);
+              setRoomId(signalData.room);
               setRole("callee");
               setStep("joining");
               
-              // Store the SDP offer for later processing
-              pendingOffer.current = signalData.sdp;
-              
-              // Join the signaling room
-              sendSignal({ type: 'JOIN', roomId: signalData.roomId });
+              // Join the signaling room (SDP will come via WebSocket)
+              sendSignal({ type: 'JOIN', roomId: signalData.room });
               
               // Auto-start joining process
-              handleJoinCallWithRoom(signalData.roomId);
+              handleJoinCallWithRoom(signalData.room);
             }
           } catch (e) {
-            console.error("Error parsing signal data from blueprint:", e);
-            addLog("ERROR: Invalid WebX offer format.");
+            console.error("Error parsing call data from blueprint:", e);
+            addLog("ERROR: Invalid WebX call format.");
           }
         }
       }
@@ -548,31 +560,24 @@ export default function Signal() {
       sendSignal({ type: 'SDP_OFFER', payload: offer });
       addLog("SDP Offer broadcasted to local peers.");
       
-      // Create WebX-formatted offer link
+      // Create compact WebX-formatted offer link (SDP via WebSocket, only room ID in link)
       const offerBlueprint: WebXBlueprint = {
-        title: "WebX Signal: Video Call Invite",
+        title: "WebX Signal Call",
         layout: "video-call",
         meta: { 
           version: "1.0", 
           author: "WebX Signal", 
           created: Date.now(), 
-          category: "communication",
-          featured: false,
-          downloads: 0
+          category: "communication"
         },
         data: [
-          { type: "heading", value: "Secure P2P Video Call" },
-          { type: "paragraph", value: "You've been invited to a serverless encrypted video call." },
-          { type: "json", value: JSON.stringify({ 
-            roomId: newRoomId, 
-            sdp: offer,
-            type: "offer"
-          })}
+          { type: "heading", value: "Secure P2P Call" },
+          { type: "json", value: JSON.stringify({ room: newRoomId }) }
         ]
       };
       
       const payload = encodeWebX(offerBlueprint);
-      const url = `webx://signal?offer=${payload}`;
+      const url = `webx://signal?call=${payload}`;
       setGeneratedLink(url);
       setConnectionStatus("Waiting for Peer...");
       addLog("Waiting for peer to join (auto-connect via local broadcast)...");
@@ -620,38 +625,36 @@ export default function Signal() {
   const handleProcessOffer = async () => {
     if (!remoteLink) return;
     
-    addLog("Decoding Remote WebX Offer...");
-    setConnectionStatus("Processing Offer...");
+    addLog("Decoding WebX Call Invite...");
+    setConnectionStatus("Processing Invite...");
     
     // Extract payload from URL or raw string
     let payload = remoteLink;
-    if (remoteLink.includes("offer=")) {
-      payload = remoteLink.split("offer=")[1];
+    if (remoteLink.includes("call=")) {
+      payload = remoteLink.split("call=")[1];
     } else if (remoteLink.includes("webx://")) {
       const url = new URL(remoteLink.replace("webx://", "http://"));
-      payload = url.searchParams.get("offer") || remoteLink;
+      payload = url.searchParams.get("call") || remoteLink;
     }
     
     const blueprint = decodeWebX(payload);
     if (blueprint && blueprint.data) {
-      // Extract signal data from JSON block
+      // Extract room ID from JSON block
       const jsonBlock = blueprint.data.find((block: any) => block.type === 'json');
       if (jsonBlock && jsonBlock.value) {
         try {
           const signalData = JSON.parse(jsonBlock.value as string);
-          if (signalData.roomId && signalData.sdp) {
-            addLog(`Remote Offer decoded - Room: ${signalData.roomId}`);
+          if (signalData.room) {
+            addLog(`Call invite decoded - Room: ${signalData.room}`);
             
             // Set room and role
-            setRoomId(signalData.roomId);
+            setRoomId(signalData.room);
             setRole("callee");
+            setStep("joining");
             
-            // Join the signaling room
-            sendSignal({ type: 'JOIN', roomId: signalData.roomId });
-            addLog("Joined signaling room.");
-            
-            // Store the SDP offer
-            pendingOffer.current = signalData.sdp;
+            // Join the signaling room (SDP will come via WebSocket)
+            sendSignal({ type: 'JOIN', roomId: signalData.room });
+            addLog("Joined signaling room. Waiting for caller's SDP...");
             
             // Request media access if not already
             if (!localStreamRef.current) {
@@ -666,22 +669,18 @@ export default function Signal() {
               createPeerConnection(stream);
             }
             
-            // Process the offer now
-            if (peerConnectionRef.current && pendingOffer.current) {
-              await processPendingOffer();
-            }
-            
-            addLog("Processing complete - waiting for connection...");
+            setConnectionStatus("Waiting for SDP Offer...");
+            addLog("Ready to receive offer from caller.");
           }
         } catch (e) {
-          console.error("Error parsing signal data:", e);
-          toast({ title: "Invalid Offer", description: "Could not parse the WebX offer data.", variant: "destructive" });
+          console.error("Error parsing call data:", e);
+          toast({ title: "Invalid Invite", description: "Could not parse the WebX call data.", variant: "destructive" });
         }
       } else {
-        toast({ title: "Invalid Format", description: "WebX offer missing signal data.", variant: "destructive" });
+        toast({ title: "Invalid Format", description: "WebX call missing room data.", variant: "destructive" });
       }
     } else {
-      toast({ title: "Invalid Link", description: "Could not decode the WebX offer.", variant: "destructive" });
+      toast({ title: "Invalid Link", description: "Could not decode the WebX call invite.", variant: "destructive" });
     }
   };
 
