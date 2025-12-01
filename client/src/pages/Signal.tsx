@@ -141,9 +141,14 @@ export default function Signal() {
     <div className="min-h-screen bg-black text-white font-mono selection:bg-green-500 selection:text-black">
       {/* Header */}
       <header className="border-b border-white/10 p-4 flex justify-between items-center bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setLocation("/")}>
-          <Radio className={`w-5 h-5 ${connectionStatus === "Connected" ? "text-green-500 animate-pulse" : "text-white/50"}`} />
-          <span className="font-bold tracking-wider">WebX <span className="text-green-500">SIGNAL</span></span>
+        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setLocation("/")}>
+          <div className="p-1 rounded bg-white/5 group-hover:bg-white/10 transition-colors">
+            <ArrowRight className="w-4 h-4 rotate-180 text-white/70" />
+          </div>
+          <div className="flex items-center gap-2">
+             <Radio className={`w-5 h-5 ${connectionStatus === "Connected" ? "text-green-500 animate-pulse" : "text-white/50"}`} />
+             <span className="font-bold tracking-wider">WebX <span className="text-green-500">SIGNAL</span></span>
+          </div>
         </div>
         <div className="flex items-center gap-4 text-xs text-white/50">
           <div className="flex items-center gap-2">
@@ -158,6 +163,32 @@ export default function Signal() {
       </header>
 
       <main className="max-w-4xl mx-auto p-6 md:p-12">
+        {/* Back Button for Sub-Steps */}
+        {(step !== "start") && (
+            <div className="mb-6">
+                <Button 
+                    variant="ghost" 
+                    className="text-white/50 hover:text-white p-0 h-auto hover:bg-transparent gap-2"
+                    onClick={() => {
+                        if (step === "connected") {
+                            if (confirm("End call and return to menu?")) {
+                                setStep("start");
+                                setConnectionStatus("Disconnected");
+                                setLogs([]);
+                                setRole(null);
+                            }
+                        } else {
+                            setStep("start");
+                            setConnectionStatus("Disconnected");
+                            setLogs([]);
+                            setRole(null);
+                        }
+                    }}
+                >
+                    <ArrowRight className="w-4 h-4 rotate-180" /> Back to Menu
+                </Button>
+            </div>
+        )}
         
         {/* Start Screen */}
         {step === "start" && (
