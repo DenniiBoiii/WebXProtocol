@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
+import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX, type WebXBlueprint } from "@/lib/webx";
 import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info, Check, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import type { Blueprint } from "@shared/schema";
 import {
   Dialog,
   DialogContent,
@@ -34,31 +35,49 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("popular");
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const categories = useMemo(() => {
-    const cats = new Set(Object.values(SAMPLE_BLUEPRINTS).map(b => b.meta.category || "other"));
-    return ["all", ...Array.from(cats)];
+  useEffect(() => {
+    const fetchBlueprints = async () => {
+      try {
+        const response = await fetch("/api/blueprints");
+        const data = await response.json();
+        setBlueprints(data);
+      } catch (error) {
+        console.error("Failed to fetch blueprints:", error);
+        toast({ title: "Error", description: "Failed to load blueprints from registry", variant: "destructive" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBlueprints();
   }, []);
 
+  const categories = useMemo(() => {
+    const cats = new Set(blueprints.map(b => b.category || "other"));
+    return ["all", ...Array.from(cats)];
+  }, [blueprints]);
+
   const filteredBlueprints = useMemo(() => {
-    let results = Object.entries(SAMPLE_BLUEPRINTS).filter(([_, bp]) => {
-      const matchesCategory = selectedCategory === "all" || bp.meta.category === selectedCategory;
+    let results = blueprints.filter((bp) => {
+      const matchesCategory = selectedCategory === "all" || bp.category === selectedCategory;
       const matchesSearch = searchNexus === "" || bp.title.toLowerCase().includes(searchNexus.toLowerCase());
       return matchesCategory && matchesSearch;
     });
 
     if (sortBy === "popular") {
-      results.sort((a, b) => (b[1].meta.downloads || 0) - (a[1].meta.downloads || 0));
+      results.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
     } else if (sortBy === "recent") {
-      results.sort((a, b) => b[1].meta.created - a[1].meta.created);
+      results.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
     }
 
     return results;
-  }, [selectedCategory, searchNexus, sortBy]);
+  }, [selectedCategory, searchNexus, sortBy, blueprints]);
 
   const featured = useMemo(() => {
-    return Object.entries(SAMPLE_BLUEPRINTS).find(([_, bp]) => bp.meta.featured);
-  }, []);
+    return blueprints.find(bp => bp.featured);
+  }, [blueprints]);
 
   const handleLoad = () => {
     if (!inputValue) return;
@@ -1010,7 +1029,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="mb-12"
             >
-              <Link href={`/view?payload=${encodeWebX(featured[1])}`}>
+              <Link href={`/view?payload=${featured.payload}`}>
                 <div className="group cursor-pointer">
                   <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 to-secondary/20 p-8 hover:border-primary/60 transition-all duration-500">
                     <div className="absolute top-0 right-0 -mr-20 -mt-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500" />
@@ -1019,15 +1038,15 @@ export default function Home() {
                         <Flame className="w-4 h-4 text-red-400" />
                         <span className="text-xs font-mono uppercase tracking-widest text-red-400">Featured This Week</span>
                       </div>
-                      <h3 className="text-3xl font-display font-bold mb-3 group-hover:text-primary transition-colors">{featured[1].title}</h3>
+                      <h3 className="text-3xl font-display font-bold mb-3 group-hover:text-primary transition-colors">{featured.title}</h3>
                       <p className="text-muted-foreground max-w-2xl mb-6 line-clamp-2">
-                        {featured[1].data.find(b => b.type === 'paragraph')?.value || "Explore this blueprint..."}
+                        {(featured.rawData as any).data?.find((b: any) => b.type === 'paragraph')?.value || "Explore this blueprint..."}
                       </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 text-sm text-muted-foreground font-mono">
-                          <span>{featured[1].meta.downloads || 0} downloads</span>
+                          <span>{featured.downloads || 0} downloads</span>
                           <span>•</span>
-                          <span>{featured[1].meta.author || "Anonymous"}</span>
+                          <span>{featured.author || "Anonymous"}</span>
                         </div>
                         <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-2 transition-transform" />
                       </div>
@@ -1082,10 +1101,14 @@ export default function Home() {
           </div>
 
           {/* Grid */}
-          {filteredBlueprints.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading blueprints from The Nexus...</p>
+            </div>
+          ) : filteredBlueprints.length > 0 ? (
             <div className="grid md:grid-cols-3 gap-6">
-              {filteredBlueprints.map(([key, blueprint]) => (
-                <Link key={key} href={`/view?payload=${encodeWebX(blueprint)}`}>
+              {filteredBlueprints.map((blueprint) => (
+                <Link key={blueprint.id} href={`/view?payload=${blueprint.payload}`}>
                   <div className="group cursor-pointer h-full">
                     <div className="bg-gradient-to-br from-white/10 to-transparent p-[1px] rounded-xl hover:from-primary hover:to-secondary transition-all duration-500 h-full">
                       <div className="bg-black/80 backdrop-blur-xl rounded-xl p-6 h-full relative overflow-hidden flex flex-col">
@@ -1095,9 +1118,9 @@ export default function Home() {
                         
                         <div className="mb-4 flex justify-between items-start gap-2">
                             <Badge variant="outline" className="border-white/10 text-xs font-mono text-muted-foreground">
-                              {blueprint.meta.category?.toUpperCase() || "OTHER"}
+                              {blueprint.category?.toUpperCase() || "OTHER"}
                             </Badge>
-                            {blueprint.meta.author === "WebX Foundation" && (
+                            {blueprint.author === "WebX Foundation" && (
                                 <div className="flex items-center gap-1 text-[10px] text-primary font-mono border border-primary/20 px-2 py-0.5 rounded-full bg-primary/10 whitespace-nowrap">
                                     <UserCheck className="w-3 h-3" /> VERIFIED
                                 </div>
@@ -1106,14 +1129,14 @@ export default function Home() {
 
                         <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors line-clamp-1">{blueprint.title}</h3>
                         <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
-                          {blueprint.data.find(b => b.type === 'paragraph')?.value || blueprint.data.find(b => b.type === 'heading')?.value || "View content..."}
+                          {(blueprint.rawData as any)?.data?.find((b: any) => b.type === 'paragraph')?.value || (blueprint.rawData as any)?.data?.find((b: any) => b.type === 'heading')?.value || "View content..."}
                         </p>
                         
                         <div className="flex items-center justify-between text-xs text-muted-foreground font-mono pt-4 border-t border-white/5">
-                            <span className="truncate">{blueprint.meta.author || "Anonymous"}</span>
-                            {blueprint.meta.downloads && (
+                            <span className="truncate">{blueprint.author || "Anonymous"}</span>
+                            {blueprint.downloads && (
                               <span className="flex items-center gap-1 text-primary/70">
-                                <TrendingUp className="w-3 h-3" /> {blueprint.meta.downloads}
+                                <TrendingUp className="w-3 h-3" /> {blueprint.downloads}
                               </span>
                             )}
                         </div>
