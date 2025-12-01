@@ -57,6 +57,7 @@ export default function Signal() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const pendingIceCandidates = useRef<RTCIceCandidate[]>([]);
   const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
+  const hasProcessedOffer = useRef<boolean>(false);
   
   // WebSocket signaling
   const wsRef = useRef<WebSocket | null>(null);
@@ -254,6 +255,7 @@ export default function Signal() {
     setRemoteStream(null);
     pendingOffer.current = null;
     pendingIceCandidates.current = [];
+    hasProcessedOffer.current = false;
   };
 
   // Connect local video when stream changes
@@ -297,7 +299,8 @@ export default function Signal() {
 
   // Process pending offer when peer connection becomes available
   const processPendingOffer = async () => {
-    if (pendingOffer.current && peerConnectionRef.current && localStreamRef.current) {
+    if (pendingOffer.current && peerConnectionRef.current && localStreamRef.current && !hasProcessedOffer.current) {
+      hasProcessedOffer.current = true;
       addLog("Processing pending SDP Offer...");
       try {
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(pendingOffer.current));
@@ -318,6 +321,7 @@ export default function Signal() {
       } catch (e) {
         console.error("Error processing pending offer:", e);
         addLog("ERROR: Failed to process pending offer.");
+        hasProcessedOffer.current = false;
       }
     }
   };
@@ -410,10 +414,16 @@ export default function Signal() {
           }
         }
         
-        // Handle SDP Offer for callee
+        // Handle SDP Offer for callee (skip if already processed)
         if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
-          addLog("Received SDP Offer from peer.");
+          if (hasProcessedOffer.current) {
+            addLog("Skipping duplicate SDP Offer (already processed).");
+            return;
+          }
+          
+          addLog("Received SDP Offer from peer via WebSocket.");
           if (peerConnectionRef.current && localStreamRef.current) {
+            hasProcessedOffer.current = true;
             try {
               await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
               addLog("Remote description set successfully.");
@@ -432,6 +442,7 @@ export default function Signal() {
             } catch (e) {
               console.error("Error handling offer:", e);
               addLog("ERROR: Failed to handle offer.");
+              hasProcessedOffer.current = false;
             }
           } else {
             pendingOffer.current = payload;
