@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Copy, 
   ArrowRight, Radio, ShieldCheck, Globe, Share2, 
-  MessageSquare, RefreshCw, Check
+  MessageSquare, RefreshCw, Check, Send, X
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
@@ -24,12 +24,44 @@ export default function Signal() {
   const [remoteLink, setRemoteLink] = useState("");
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState<{sender: string, text: string, time: number}[]>([]);
+  const [newMessage, setNewMessage] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [logs, setLogs] = useState<string[]>([]);
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isChatOpen]);
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
+    
+    setMessages(prev => [...prev, { sender: "You", text: newMessage, time: Date.now() }]);
+    setNewMessage("");
+    
+    // Simulate peer response
+    setTimeout(() => {
+      const responses = [
+        "I can see you clearly!",
+        "The video quality is surprisingly good.",
+        "So this entire call is running peer-to-peer?",
+        "Wait, let me share my screen.",
+        "This is much faster than Zoom."
+      ];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      setMessages(prev => [...prev, { sender: "Peer", text: randomResponse, time: Date.now() }]);
+    }, 2000 + Math.random() * 3000);
+  };
 
   const handleCreateCall = () => {
     setRole("caller");
@@ -427,8 +459,67 @@ export default function Signal() {
                </div>
             </motion.div>
 
+            {/* Chat Panel */}
+            {isChatOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute top-4 right-4 bottom-24 w-80 bg-black/90 border border-white/20 rounded-xl overflow-hidden shadow-2xl z-20 flex flex-col backdrop-blur-xl"
+              >
+                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-white/70" />
+                    <span className="font-bold text-sm">P2P Chat</span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-white/10" onClick={() => setIsChatOpen(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {messages.length === 0 && (
+                    <div className="text-center text-white/30 text-xs mt-10">
+                      <p>Messages are end-to-end encrypted.</p>
+                      <p>No server history.</p>
+                    </div>
+                  )}
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`flex flex-col ${msg.sender === "You" ? "items-end" : "items-start"}`}>
+                      <div className={`max-w-[85%] rounded-lg p-3 text-sm ${
+                        msg.sender === "You" 
+                          ? "bg-green-600 text-white" 
+                          : "bg-white/10 text-white border border-white/10"
+                      }`}>
+                        {msg.text}
+                      </div>
+                      <span className="text-[10px] text-white/30 mt-1 px-1">
+                        {new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <div className="p-3 border-t border-white/10 bg-white/5">
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="Type a message..." 
+                      className="bg-black/50 border-white/10 h-9 text-sm"
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                    />
+                    <Button size="icon" className="h-9 w-9 bg-green-600 hover:bg-green-700" onClick={handleSendMessage}>
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Controls Bar */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex justify-center items-center gap-4">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent flex justify-center items-center gap-4 z-30">
                <Button 
                   variant="outline" 
                   size="icon" 
@@ -456,6 +547,8 @@ export default function Signal() {
                      setConnectionStatus("Disconnected");
                      setLogs([]);
                      setRole(null);
+                     setIsChatOpen(false);
+                     setMessages([]);
                      toast({ title: "Call Ended", description: "P2P connection terminated." });
                   }}
                >
@@ -465,7 +558,8 @@ export default function Signal() {
                <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-12 w-12 rounded-full border-white/10 bg-white/10 hover:bg-white/20 backdrop-blur-md"
+                  className={`h-12 w-12 rounded-full border-white/10 backdrop-blur-md ${isChatOpen ? 'bg-green-500/20 text-green-400 border-green-500/50' : 'bg-white/10 hover:bg-white/20'}`}
+                  onClick={() => setIsChatOpen(!isChatOpen)}
                >
                   <MessageSquare className="w-5 h-5" />
                </Button>
