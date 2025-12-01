@@ -457,7 +457,6 @@ export default function Signal() {
                              </Button>
                         </div>
                      </motion.div>
-                     </motion.div>
                    )}
                 </div>
               )}
