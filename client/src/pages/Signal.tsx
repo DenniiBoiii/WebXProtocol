@@ -565,17 +565,25 @@ export default function Signal() {
                     </div>
                   )}
                   {messages.map((msg, i) => (
-                    <div key={i} className={`flex flex-col ${msg.sender === "You" ? "items-end" : "items-start"}`}>
-                      <div className={`max-w-[85%] rounded-lg p-3 text-sm ${
-                        msg.sender === "You" 
-                          ? "bg-green-600 text-white" 
-                          : "bg-white/10 text-white border border-white/10"
-                      }`}>
-                        {msg.text}
-                      </div>
-                      <span className="text-[10px] text-white/30 mt-1 px-1">
-                        {new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                    <div key={i} className={`flex flex-col ${msg.sender === "You" ? "items-end" : msg.sender === "System" ? "items-center" : "items-start"}`}>
+                      {msg.sender === "System" ? (
+                        <div className="text-xs text-white/50 bg-white/5 px-3 py-1 rounded-full my-2 border border-white/5">
+                            {msg.text}
+                        </div>
+                      ) : (
+                        <>
+                          <div className={`max-w-[85%] rounded-lg p-3 text-sm ${
+                            msg.sender === "You" 
+                              ? "bg-green-600 text-white" 
+                              : "bg-white/10 text-white border border-white/10"
+                          }`}>
+                            {msg.text}
+                          </div>
+                          <span className="text-[10px] text-white/30 mt-1 px-1">
+                            {new Date(msg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </>
+                      )}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -649,6 +657,7 @@ export default function Signal() {
                   variant="outline" 
                   size="icon" 
                   className="h-12 w-12 rounded-full border-white/10 bg-white/10 hover:bg-white/20 backdrop-blur-md"
+                  onClick={copyLink}
                >
                   <Share2 className="w-5 h-5" />
                </Button>
