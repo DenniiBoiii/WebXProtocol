@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
-// Mock WebRTC for the prototype to demonstrate the signaling flow via links
-// In a real implementation, this would use actual RTCPeerConnection
+// WebRTC video calling with link-based signaling
 export default function Signal() {
   const [step, setStep] = useState<"start" | "created" | "joining" | "connected">("start");
   const [role, setRole] = useState<"caller" | "callee" | null>(null);
@@ -33,6 +32,12 @@ export default function Signal() {
   const [_, setLocation] = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
+  
+  // Media stream refs
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [hasMediaAccess, setHasMediaAccess] = useState(false);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const roleRef = useRef(role);
   const stepRef = useRef(step);
@@ -41,6 +46,70 @@ export default function Signal() {
     roleRef.current = role;
     stepRef.current = step;
   }, [role, step]);
+
+  // Request camera and microphone access
+  const requestMediaAccess = async () => {
+    try {
+      addLog("Requesting camera and microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+      setLocalStream(stream);
+      setHasMediaAccess(true);
+      addLog("Media access granted.");
+      
+      // Connect stream to local video element
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      
+      return stream;
+    } catch (error) {
+      console.error("Media access error:", error);
+      addLog("ERROR: Media access denied or unavailable.");
+      toast({ 
+        title: "Camera/Mic Access Required", 
+        description: "Please allow camera and microphone access for video calls.",
+        variant: "destructive" 
+      });
+      return null;
+    }
+  };
+
+  // Stop media streams when call ends
+  const stopMediaStreams = () => {
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      setLocalStream(null);
+      setHasMediaAccess(false);
+    }
+  };
+
+  // Connect local video when stream changes
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream, step]);
+
+  // Toggle video track
+  useEffect(() => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach(track => {
+        track.enabled = isVideoEnabled;
+      });
+    }
+  }, [isVideoEnabled, localStream]);
+
+  // Toggle audio track
+  useEffect(() => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => {
+        track.enabled = isAudioEnabled;
+      });
+    }
+  }, [isAudioEnabled, localStream]);
 
   // Initialize BroadcastChannel for local P2P simulation
   useEffect(() => {
@@ -65,6 +134,7 @@ export default function Signal() {
       }
 
       if (type === 'END_CALL' && stepRef.current === 'connected') {
+         stopMediaStreams();
          setStep("start");
          setConnectionStatus("Disconnected");
          setLogs([]);
@@ -103,12 +173,23 @@ export default function Signal() {
     setNewMessage("");
   };
 
-  const handleCreateCall = () => {
+  const handleCreateCall = async () => {
     setRole("caller");
     setStep("created");
-    setConnectionStatus("Generating Offer...");
+    setConnectionStatus("Requesting Media Access...");
     addLog("Initializing WebRTC PeerConnection...");
+    
+    // Request media access first
+    const stream = await requestMediaAccess();
+    if (!stream) {
+      setStep("start");
+      setRole(null);
+      setConnectionStatus("Disconnected");
+      return;
+    }
+    
     addLog("Creating Data Channel 'webx-signal'...");
+    setConnectionStatus("Generating Offer...");
     
     // Simulate SDP generation
     setTimeout(() => {
@@ -142,9 +223,21 @@ export default function Signal() {
     }, 1500);
   };
 
-  const handleJoinCall = () => {
+  const handleJoinCall = async () => {
     setRole("callee");
     setStep("joining");
+    setConnectionStatus("Requesting Media Access...");
+    
+    // Request media access first
+    const stream = await requestMediaAccess();
+    if (!stream) {
+      setStep("start");
+      setRole(null);
+      setConnectionStatus("Disconnected");
+      return;
+    }
+    
+    setConnectionStatus("Waiting for Offer...");
   };
 
   const handleProcessOffer = () => {
@@ -262,12 +355,14 @@ export default function Signal() {
                     onClick={() => {
                         if (step === "connected") {
                             if (confirm("End call and return to menu?")) {
+                                stopMediaStreams();
                                 setStep("start");
                                 setConnectionStatus("Disconnected");
                                 setLogs([]);
                                 setRole(null);
                             }
                         } else {
+                            stopMediaStreams();
                             setStep("start");
                             setConnectionStatus("Disconnected");
                             setLogs([]);
@@ -508,34 +603,59 @@ export default function Signal() {
             animate={{ opacity: 1, scale: 1 }}
             className="relative h-[80vh] rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl"
           >
-            {/* Main Video (Remote) */}
+            {/* Main Video (Remote) - In demo mode, shows a placeholder since we can't do real P2P without a signaling server */}
             <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+               <video 
+                  ref={remoteVideoRef}
+                  autoPlay 
+                  playsInline
+                  className="w-full h-full object-cover hidden"
+               />
                <div className="text-center">
                   <div className="w-32 h-32 rounded-full bg-white/5 mx-auto mb-4 flex items-center justify-center animate-pulse">
-                     <span className="text-4xl">👤</span>
+                     <Video className="w-12 h-12 text-white/30" />
                   </div>
                   <p className="text-white/50">Peer Connected</p>
-                  <p className="text-xs text-white/30 font-mono mt-2">1080p • 60fps • 24ms latency</p>
+                  <p className="text-xs text-white/30 font-mono mt-2">Waiting for remote stream...</p>
+                  <p className="text-xs text-green-400/60 font-mono mt-1">Your camera is active below ↓</p>
                </div>
                
                {/* Simulated Video Noise/Grain */}
                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
             </div>
 
-            {/* Self View (PIP) */}
+            {/* Self View (PIP) - Shows local camera feed */}
             <motion.div 
                drag
                dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
                className="absolute bottom-24 right-6 w-48 h-32 bg-black/80 border border-white/20 rounded-xl overflow-hidden shadow-xl cursor-move z-10"
             >
-               <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-                  <span className="text-2xl">😊</span>
-               </div>
+               {hasMediaAccess && isVideoEnabled ? (
+                  <video 
+                     ref={localVideoRef}
+                     autoPlay 
+                     playsInline
+                     muted
+                     className="w-full h-full object-cover mirror"
+                     style={{ transform: 'scaleX(-1)' }}
+                  />
+               ) : (
+                  <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                     {!isVideoEnabled ? (
+                        <VideoOff className="w-8 h-8 text-red-500/50" />
+                     ) : (
+                        <Video className="w-8 h-8 text-white/30 animate-pulse" />
+                     )}
+                  </div>
+               )}
                <div className="absolute bottom-2 left-2">
                   <div className="flex gap-1">
                      {!isAudioEnabled && <MicOff className="w-3 h-3 text-red-500" />}
                      {!isVideoEnabled && <VideoOff className="w-3 h-3 text-red-500" />}
                   </div>
+               </div>
+               <div className="absolute top-2 right-2 text-[10px] text-white/50 bg-black/50 px-1.5 py-0.5 rounded">
+                  You
                </div>
             </motion.div>
 
@@ -632,6 +752,7 @@ export default function Signal() {
                   className="h-14 w-14 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20"
                   onClick={() => {
                      broadcastChannel?.postMessage({ type: 'END_CALL' });
+                     stopMediaStreams();
                      setStep("start");
                      setConnectionStatus("Disconnected");
                      setLogs([]);
