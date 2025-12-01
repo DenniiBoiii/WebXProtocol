@@ -15,6 +15,14 @@ import {
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
+// WebRTC configuration for STUN servers
+const rtcConfig: RTCConfiguration = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ]
+};
+
 // WebRTC video calling with link-based signaling
 export default function Signal() {
   const [step, setStep] = useState<"start" | "created" | "joining" | "connected">("start");
@@ -35,9 +43,14 @@ export default function Signal() {
   
   // Media stream refs
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [hasMediaAccess, setHasMediaAccess] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // WebRTC peer connection ref
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const pendingIceCandidates = useRef<RTCIceCandidate[]>([]);
 
   const roleRef = useRef(role);
   const stepRef = useRef(step);
@@ -46,6 +59,8 @@ export default function Signal() {
     roleRef.current = role;
     stepRef.current = step;
   }, [role, step]);
+
+  const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
   // Request camera and microphone access
   const requestMediaAccess = async () => {
@@ -77,13 +92,71 @@ export default function Signal() {
     }
   };
 
-  // Stop media streams when call ends
+  // Create WebRTC peer connection
+  const createPeerConnection = (stream: MediaStream) => {
+    addLog("Creating RTCPeerConnection...");
+    const pc = new RTCPeerConnection(rtcConfig);
+    
+    // Add local tracks to the connection
+    stream.getTracks().forEach(track => {
+      pc.addTrack(track, stream);
+      addLog(`Added ${track.kind} track to connection.`);
+    });
+    
+    // Handle incoming remote tracks
+    pc.ontrack = (event) => {
+      addLog(`Received remote ${event.track.kind} track.`);
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+        if (remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = event.streams[0];
+        }
+      }
+    };
+    
+    // Handle ICE candidates
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        addLog("ICE candidate gathered.");
+        // Send ICE candidate to peer via broadcast channel
+        broadcastChannel?.postMessage({ 
+          type: 'ICE_CANDIDATE', 
+          payload: event.candidate.toJSON() 
+        });
+      }
+    };
+    
+    // Handle connection state changes
+    pc.onconnectionstatechange = () => {
+      addLog(`Connection state: ${pc.connectionState}`);
+      if (pc.connectionState === 'connected') {
+        setConnectionStatus("Connected");
+        setStep("connected");
+      } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        setConnectionStatus("Connection Lost");
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      addLog(`ICE connection state: ${pc.iceConnectionState}`);
+    };
+    
+    peerConnectionRef.current = pc;
+    return pc;
+  };
+
+  // Stop media streams and close peer connection
   const stopMediaStreams = () => {
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
       setLocalStream(null);
       setHasMediaAccess(false);
     }
+    setRemoteStream(null);
   };
 
   // Connect local video when stream changes
@@ -92,6 +165,13 @@ export default function Signal() {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream, step]);
+
+  // Connect remote video when stream changes
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
   // Toggle video track
   useEffect(() => {
@@ -111,29 +191,77 @@ export default function Signal() {
     }
   }, [isAudioEnabled, localStream]);
 
-  // Initialize BroadcastChannel for local P2P simulation
+  // Initialize BroadcastChannel for local P2P signaling
   useEffect(() => {
-    const bc = new BroadcastChannel('webx-signal-v1');
-    bc.onmessage = (event) => {
+    const bc = new BroadcastChannel('webx-signal-v2');
+    bc.onmessage = async (event) => {
       const { type, payload } = event.data;
       
-      // Use refs to access current state without closure issues
-      if (type === 'ANSWER' && roleRef.current === 'caller' && stepRef.current === 'created') {
-        addLog("Received ANSWER via local broadcast.");
-        setRemoteLink(payload);
-        toast({ title: "Peer Connected", description: "Received answer signal automatically." });
-        // Auto-connect
-        setTimeout(() => {
-            // Must pass payload explicitly because remoteLink state might not be updated yet
-            handleCompleteHandshake(payload);
-        }, 500);
+      // Handle ICE candidates
+      if (type === 'ICE_CANDIDATE' && peerConnectionRef.current) {
+        try {
+          if (peerConnectionRef.current.remoteDescription) {
+            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
+            addLog("Added remote ICE candidate.");
+          } else {
+            pendingIceCandidates.current.push(new RTCIceCandidate(payload));
+          }
+        } catch (e) {
+          console.error("Error adding ICE candidate:", e);
+        }
+      }
+      
+      // Handle SDP Answer for caller
+      if (type === 'SDP_ANSWER' && roleRef.current === 'caller' && peerConnectionRef.current) {
+        addLog("Received SDP Answer from peer.");
+        try {
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
+          addLog("Remote description set successfully.");
+          
+          // Add pending ICE candidates
+          for (const candidate of pendingIceCandidates.current) {
+            await peerConnectionRef.current.addIceCandidate(candidate);
+          }
+          pendingIceCandidates.current = [];
+          
+          toast({ title: "Peer Connected", description: "Video call established!" });
+        } catch (e) {
+          console.error("Error setting remote description:", e);
+          addLog("ERROR: Failed to set remote description.");
+        }
+      }
+      
+      // Handle SDP Offer for callee (auto-answer)
+      if (type === 'SDP_OFFER' && roleRef.current === 'callee' && peerConnectionRef.current) {
+        addLog("Received SDP Offer from peer.");
+        try {
+          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
+          addLog("Remote description set successfully.");
+          
+          // Create and send answer
+          const answer = await peerConnectionRef.current.createAnswer();
+          await peerConnectionRef.current.setLocalDescription(answer);
+          addLog("Created and set local SDP Answer.");
+          
+          bc.postMessage({ type: 'SDP_ANSWER', payload: answer });
+          addLog("Sent SDP Answer to peer.");
+          
+          // Add pending ICE candidates
+          for (const candidate of pendingIceCandidates.current) {
+            await peerConnectionRef.current.addIceCandidate(candidate);
+          }
+          pendingIceCandidates.current = [];
+        } catch (e) {
+          console.error("Error handling offer:", e);
+          addLog("ERROR: Failed to handle offer.");
+        }
       }
       
       if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
         setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
       }
 
-      if (type === 'END_CALL' && stepRef.current === 'connected') {
+      if (type === 'END_CALL') {
          stopMediaStreams();
          setStep("start");
          setConnectionStatus("Disconnected");
@@ -147,8 +275,6 @@ export default function Signal() {
     setBroadcastChannel(bc);
     return () => bc.close();
   }, []); // Run once on mount to avoid race conditions with re-creating channel
-
-  const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -188,14 +314,21 @@ export default function Signal() {
       return;
     }
     
-    addLog("Creating Data Channel 'webx-signal'...");
+    // Create WebRTC peer connection
+    const pc = createPeerConnection(stream);
     setConnectionStatus("Generating Offer...");
     
-    // Simulate SDP generation
-    setTimeout(() => {
-      addLog("Generated Local SDP Offer.");
-      addLog("Gathering ICE Candidates...");
+    try {
+      // Create real SDP offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      addLog("Created and set local SDP Offer.");
       
+      // Broadcast offer to other tabs
+      broadcastChannel?.postMessage({ type: 'SDP_OFFER', payload: offer });
+      addLog("SDP Offer broadcasted to local peers.");
+      
+      // Create WebX link for manual sharing
       const offerBlueprint: WebXBlueprint = {
         title: "Incoming Secure Video Call",
         layout: "video-call",
@@ -210,17 +343,20 @@ export default function Signal() {
         data: [
           { type: "heading", value: "Secure Video Call Request" },
           { type: "paragraph", value: "Someone is inviting you to a P2P encrypted video call." },
-          { type: "code", value: "SDP_OFFER_v=0_o=-_463748_2_IN_IP4_127.0.0.1..." } // Mock SDP
+          { type: "code", value: JSON.stringify(offer).substring(0, 100) + "..." }
         ]
       };
       
       const payload = encodeWebX(offerBlueprint);
       const url = `webx://signal?offer=${payload}`;
       setGeneratedLink(url);
-      setConnectionStatus("Waiting for Answer...");
-      addLog("Offer encoded into WebX Link. Ready to share.");
-      addLog("Listening for local broadcast answers...");
-    }, 1500);
+      setConnectionStatus("Waiting for Peer...");
+      addLog("Waiting for peer to join (auto-connect via local broadcast)...");
+    } catch (e) {
+      console.error("Error creating offer:", e);
+      addLog("ERROR: Failed to create offer.");
+      setConnectionStatus("Error");
+    }
   };
 
   const handleJoinCall = async () => {
@@ -237,7 +373,10 @@ export default function Signal() {
       return;
     }
     
-    setConnectionStatus("Waiting for Offer...");
+    // Create peer connection ready to receive offer
+    createPeerConnection(stream);
+    setConnectionStatus("Ready - Waiting for Offer...");
+    addLog("Peer connection ready. Listening for incoming offer...");
   };
 
   const handleProcessOffer = () => {
@@ -603,22 +742,25 @@ export default function Signal() {
             animate={{ opacity: 1, scale: 1 }}
             className="relative h-[80vh] rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl"
           >
-            {/* Main Video (Remote) - In demo mode, shows a placeholder since we can't do real P2P without a signaling server */}
+            {/* Main Video (Remote) */}
             <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
-               <video 
-                  ref={remoteVideoRef}
-                  autoPlay 
-                  playsInline
-                  className="w-full h-full object-cover hidden"
-               />
-               <div className="text-center">
-                  <div className="w-32 h-32 rounded-full bg-white/5 mx-auto mb-4 flex items-center justify-center animate-pulse">
-                     <Video className="w-12 h-12 text-white/30" />
+               {remoteStream ? (
+                  <video 
+                     ref={remoteVideoRef}
+                     autoPlay 
+                     playsInline
+                     className="w-full h-full object-cover"
+                  />
+               ) : (
+                  <div className="text-center">
+                     <div className="w-32 h-32 rounded-full bg-white/5 mx-auto mb-4 flex items-center justify-center animate-pulse">
+                        <Video className="w-12 h-12 text-white/30" />
+                     </div>
+                     <p className="text-white/50">Peer Connected</p>
+                     <p className="text-xs text-white/30 font-mono mt-2">Waiting for remote stream...</p>
+                     <p className="text-xs text-green-400/60 font-mono mt-1">Your camera is active below ↓</p>
                   </div>
-                  <p className="text-white/50">Peer Connected</p>
-                  <p className="text-xs text-white/30 font-mono mt-2">Waiting for remote stream...</p>
-                  <p className="text-xs text-green-400/60 font-mono mt-1">Your camera is active below ↓</p>
-               </div>
+               )}
                
                {/* Simulated Video Noise/Grain */}
                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
