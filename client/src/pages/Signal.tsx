@@ -32,6 +32,41 @@ export default function Signal() {
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
+
+  // Initialize BroadcastChannel for local P2P simulation
+  useEffect(() => {
+    const bc = new BroadcastChannel('webx-signal-v1');
+    bc.onmessage = (event) => {
+      const { type, payload } = event.data;
+      
+      if (type === 'ANSWER' && role === 'caller' && step === 'created') {
+        addLog("Received ANSWER via local broadcast.");
+        setRemoteLink(payload);
+        toast({ title: "Peer Connected", description: "Received answer signal automatically." });
+        // Auto-connect
+        setTimeout(() => {
+            handleCompleteHandshake(payload);
+        }, 500);
+      }
+      
+      if (type === 'CHAT_MSG' && step === 'connected') {
+        setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
+      }
+
+      if (type === 'END_CALL' && step === 'connected') {
+         setStep("start");
+         setConnectionStatus("Disconnected");
+         setLogs([]);
+         setRole(null);
+         setIsChatOpen(false);
+         setMessages([]);
+         toast({ title: "Call Ended", description: "Remote peer ended the call." });
+      }
+    };
+    setBroadcastChannel(bc);
+    return () => bc.close();
+  }, [role, step]);
 
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
@@ -46,21 +81,16 @@ export default function Signal() {
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
     
-    setMessages(prev => [...prev, { sender: "You", text: newMessage, time: Date.now() }]);
-    setNewMessage("");
+    const msg = { sender: "You", text: newMessage, time: Date.now() };
+    setMessages(prev => [...prev, msg]);
     
-    // Simulate peer response
-    setTimeout(() => {
-      const responses = [
-        "I can see you clearly!",
-        "The video quality is surprisingly good.",
-        "So this entire call is running peer-to-peer?",
-        "Wait, let me share my screen.",
-        "This is much faster than Zoom."
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      setMessages(prev => [...prev, { sender: "Peer", text: randomResponse, time: Date.now() }]);
-    }, 2000 + Math.random() * 3000);
+    // Broadcast to peer
+    broadcastChannel?.postMessage({ 
+        type: 'CHAT_MSG', 
+        payload: { text: newMessage, time: Date.now() } 
+    });
+    
+    setNewMessage("");
   };
 
   const handleCreateCall = () => {
@@ -98,6 +128,7 @@ export default function Signal() {
       setGeneratedLink(url);
       setConnectionStatus("Waiting for Answer...");
       addLog("Offer encoded into WebX Link. Ready to share.");
+      addLog("Listening for local broadcast answers...");
     }, 1500);
   };
 
@@ -143,15 +174,29 @@ export default function Signal() {
         const url = `${window.location.origin}/signal?answer=${answerPayload}`;
         setGeneratedLink(url);
         setConnectionStatus("Answer Generated");
-        addLog("Answer encoded into WebX Link. Send this back to caller.");
+        addLog("Answer encoded into WebX Link.");
+        
+        // Auto-broadcast answer
+        broadcastChannel?.postMessage({ type: 'ANSWER', payload: url });
+        addLog("Answer broadcasted to local peers automatically.");
+        
+        // Auto-connect for callee side too
+        setConnectionStatus("Connecting...");
+        setTimeout(() => {
+            setStep("connected");
+            setConnectionStatus("Connected");
+        }, 1000);
+
       }, 1500);
     } else {
       toast({ title: "Invalid Link", description: "Could not decode the WebX offer.", variant: "destructive" });
     }
   };
 
-  const handleCompleteHandshake = () => {
-    if (!remoteLink) return;
+  const handleCompleteHandshake = (overrideLink?: string) => {
+    const linkToUse = overrideLink || remoteLink;
+    if (!linkToUse) return;
+    
     addLog("Receiving Remote Answer...");
     setConnectionStatus("Establishing Connection...");
     
@@ -311,6 +356,11 @@ export default function Signal() {
                     <div className="absolute left-5 top-0 bottom-0 w-px bg-white/10"></div>
                     <div className="ml-12 space-y-2">
                       <p className="text-sm text-white/70">Waiting for peer to send back an Answer Link...</p>
+                      <div className="flex items-center gap-2 p-3 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 mb-2">
+                        <Radio className="w-4 h-4 animate-pulse" />
+                        <span>Listening for local broadcast answer (Auto-Connect active)</span>
+                      </div>
+                      <div className="text-xs text-white/30 uppercase tracking-widest font-bold mb-1 mt-4">Manual Fallback</div>
                       <Input 
                         placeholder="Paste their Answer Link here..." 
                         className="bg-white/5 border-white/10"
@@ -320,7 +370,7 @@ export default function Signal() {
                       <Button 
                         className="w-full mt-2" 
                         disabled={!remoteLink}
-                        onClick={handleCompleteHandshake}
+                        onClick={() => handleCompleteHandshake()}
                       >
                         Verify Answer & Connect <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -367,6 +417,10 @@ export default function Signal() {
                         <p className="text-sm text-white/60 text-center">
                           Send this link BACK to the caller to connect.
                         </p>
+                        <div className="flex items-center justify-center gap-2 p-2 my-2 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+                            <Radio className="w-4 h-4 animate-pulse" />
+                            <span>Answer broadcasted to local peers automatically</span>
+                        </div>
                         <Button className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white" onClick={() => {
                             setConnectionStatus("Connecting...");
                             setTimeout(() => {
@@ -374,7 +428,7 @@ export default function Signal() {
                                 setConnectionStatus("Connected");
                             }, 1000);
                         }}>
-                           I've Sent It, Join Call <Video className="w-4 h-4 ml-2" />
+                           Connecting... <Video className="w-4 h-4 ml-2 animate-pulse" />
                         </Button>
                      </motion.div>
                    )}
@@ -543,6 +597,7 @@ export default function Signal() {
                   size="icon" 
                   className="h-14 w-14 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20"
                   onClick={() => {
+                     broadcastChannel?.postMessage({ type: 'END_CALL' });
                      setStep("start");
                      setConnectionStatus("Disconnected");
                      setLogs([]);
