@@ -203,10 +203,19 @@ export default function Signal() {
     pc.ontrack = (event) => {
       addLog(`Received remote ${event.track.kind} track.`);
       if (event.streams && event.streams[0]) {
-        setRemoteStream(event.streams[0]);
+        const stream = event.streams[0];
+        setRemoteStream(stream);
+        
+        // Immediately attach to video element if available
         if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
+          remoteVideoRef.current.srcObject = stream;
+          addLog("Remote video attached to element.");
         }
+        
+        // Transition to connected state when we receive remote stream
+        setConnectionStatus("Connected");
+        setStep("connected");
+        addLog("Call connected - remote stream received.");
       }
     };
     
@@ -265,12 +274,14 @@ export default function Signal() {
     }
   }, [localStream, step]);
 
-  // Connect remote video when stream changes
+  // Connect remote video when stream or step changes
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      // Force play in case autoplay is blocked
+      remoteVideoRef.current.play().catch(e => console.log("Remote video play:", e));
     }
-  }, [remoteStream]);
+  }, [remoteStream, step]);
 
   // Toggle video track
   useEffect(() => {
