@@ -4,10 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { decodeWebX, SAMPLE_BLUEPRINTS, encodeWebX } from "@/lib/webx";
-import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info } from "lucide-react";
+import { ArrowRight, Zap, Code, Layers, Share2, Globe, Plus, UserCheck, Search, Flame, TrendingUp, BookOpen, Link2, Zap as ZapIcon, Database, Sparkles, Lock, Info, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import comparisonDiagram from "@assets/generated_images/webx_vs_http_comparison_diagram.png";
 import magicLink from "@assets/generated_images/magic_hyperlink_with_page_inside.png";
 
