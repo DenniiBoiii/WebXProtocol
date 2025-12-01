@@ -23,8 +23,10 @@ const rtcConfig: RTCConfiguration = {
   ]
 };
 
-// Shared broadcast channel for signaling (created once)
-const signalChannel = new BroadcastChannel('webx-signal-v3');
+// Generate unique room ID
+function generateRoomId(): string {
+  return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+}
 
 // WebRTC video calling with link-based signaling
 export default function Signal() {
@@ -55,16 +57,83 @@ export default function Signal() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const pendingIceCandidates = useRef<RTCIceCandidate[]>([]);
   const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
+  
+  // WebSocket signaling
+  const wsRef = useRef<WebSocket | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
 
   const roleRef = useRef(role);
   const stepRef = useRef(step);
+  const roomIdRef = useRef(roomId);
 
   useEffect(() => {
     roleRef.current = role;
     stepRef.current = step;
-  }, [role, step]);
+    roomIdRef.current = roomId;
+  }, [role, step, roomId]);
+
+  // Check for room ID in URL (joining via shared link)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlRoomId = params.get('room');
+    if (urlRoomId && !roomId && wsConnected) {
+      addLog(`Joining room from link: ${urlRoomId}`);
+      setRoomId(urlRoomId);
+      setRole("callee");
+      setStep("joining");
+      sendSignal({ type: 'JOIN', roomId: urlRoomId });
+      
+      // Auto-start joining process
+      handleJoinCallWithRoom(urlRoomId);
+    }
+  }, [wsConnected]);
 
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  
+  // Join call when room ID is provided from URL
+  const handleJoinCallWithRoom = async (joinRoomId: string) => {
+    setConnectionStatus("Requesting Media Access...");
+    
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    }).catch((error) => {
+      console.error("Media access error:", error);
+      addLog("ERROR: Media access denied or unavailable.");
+      toast({ 
+        title: "Camera/Mic Access Required", 
+        description: "Please allow camera and microphone access for video calls.",
+        variant: "destructive" 
+      });
+      return null;
+    });
+    
+    if (!stream) {
+      setStep("start");
+      setRole(null);
+      setRoomId(null);
+      setConnectionStatus("Disconnected");
+      return;
+    }
+    
+    setLocalStream(stream);
+    localStreamRef.current = stream;
+    setHasMediaAccess(true);
+    addLog("Media access granted.");
+    
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+    
+    createPeerConnection(stream);
+    setConnectionStatus("Ready - Waiting for Offer...");
+    addLog("Peer connection ready. Listening for incoming offer...");
+    
+    if (pendingOffer.current) {
+      await processPendingOffer();
+    }
+  };
 
   // Request camera and microphone access
   const requestMediaAccess = async () => {
@@ -123,7 +192,7 @@ export default function Signal() {
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         addLog("ICE candidate gathered.");
-        signalChannel.postMessage({ 
+        sendSignal({ 
           type: 'ICE_CANDIDATE', 
           payload: event.candidate.toJSON() 
         });
@@ -198,6 +267,13 @@ export default function Signal() {
     }
   }, [isAudioEnabled, localStream]);
 
+  // Send message via WebSocket
+  const sendSignal = (message: object) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(message));
+    }
+  };
+
   // Process pending offer when peer connection becomes available
   const processPendingOffer = async () => {
     if (pendingOffer.current && peerConnectionRef.current && localStreamRef.current) {
@@ -210,7 +286,7 @@ export default function Signal() {
         await peerConnectionRef.current.setLocalDescription(answer);
         addLog("Created and set local SDP Answer.");
         
-        signalChannel.postMessage({ type: 'SDP_ANSWER', payload: answer });
+        sendSignal({ type: 'SDP_ANSWER', payload: answer });
         addLog("Sent SDP Answer to peer.");
         
         for (const candidate of pendingIceCandidates.current) {
@@ -225,93 +301,148 @@ export default function Signal() {
     }
   };
 
-  // Initialize BroadcastChannel message handler
+  // Initialize WebSocket connection
   useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      const { type, payload } = event.data;
-      
-      // Handle ICE candidates
-      if (type === 'ICE_CANDIDATE') {
-        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-          try {
-            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
-            addLog("Added remote ICE candidate.");
-          } catch (e) {
-            console.error("Error adding ICE candidate:", e);
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/signal`;
+    
+    addLog("Connecting to signaling server...");
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+    
+    ws.onopen = () => {
+      addLog("Connected to signaling server.");
+      setWsConnected(true);
+    };
+    
+    ws.onclose = () => {
+      addLog("Disconnected from signaling server.");
+      setWsConnected(false);
+    };
+    
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+      addLog("ERROR: WebSocket connection failed.");
+    };
+    
+    ws.onmessage = async (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        const { type, payload } = message;
+        
+        // Handle room join confirmation
+        if (type === 'JOINED') {
+          addLog(`Joined room ${message.roomId} (${message.peerCount} peer(s) waiting)`);
+          if (message.peerCount > 0 && roleRef.current === 'callee') {
+            addLog("Peer is already in room, waiting for offer...");
           }
-        } else {
-          pendingIceCandidates.current.push(new RTCIceCandidate(payload));
         }
-      }
-      
-      // Handle SDP Answer for caller
-      if (type === 'SDP_ANSWER' && roleRef.current === 'caller' && peerConnectionRef.current) {
-        addLog("Received SDP Answer from peer.");
-        try {
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
-          addLog("Remote description set successfully.");
-          
-          for (const candidate of pendingIceCandidates.current) {
-            await peerConnectionRef.current.addIceCandidate(candidate);
+        
+        // Handle peer join notification
+        if (type === 'PEER_JOINED') {
+          addLog(`Peer joined the room (${message.peerCount} total)`);
+          // If we're the caller and peer just joined, send our offer
+          if (roleRef.current === 'caller' && peerConnectionRef.current) {
+            const offer = peerConnectionRef.current.localDescription;
+            if (offer) {
+              addLog("Re-sending SDP Offer to new peer...");
+              sendSignal({ type: 'SDP_OFFER', payload: offer });
+            }
           }
-          pendingIceCandidates.current = [];
-          
-          toast({ title: "Peer Connected", description: "Video call established!" });
-        } catch (e) {
-          console.error("Error setting remote description:", e);
-          addLog("ERROR: Failed to set remote description.");
         }
-      }
-      
-      // Handle SDP Offer for callee
-      if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
-        addLog("Received SDP Offer from peer.");
-        if (peerConnectionRef.current && localStreamRef.current) {
+        
+        // Handle peer left
+        if (type === 'PEER_LEFT') {
+          addLog(`Peer left the room (${message.peerCount} remaining)`);
+        }
+        
+        // Handle ICE candidates
+        if (type === 'ICE_CANDIDATE') {
+          if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
+            try {
+              await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
+              addLog("Added remote ICE candidate.");
+            } catch (e) {
+              console.error("Error adding ICE candidate:", e);
+            }
+          } else {
+            pendingIceCandidates.current.push(new RTCIceCandidate(payload));
+          }
+        }
+        
+        // Handle SDP Answer for caller
+        if (type === 'SDP_ANSWER' && roleRef.current === 'caller' && peerConnectionRef.current) {
+          addLog("Received SDP Answer from peer.");
           try {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
             addLog("Remote description set successfully.");
-            
-            const answer = await peerConnectionRef.current.createAnswer();
-            await peerConnectionRef.current.setLocalDescription(answer);
-            addLog("Created and set local SDP Answer.");
-            
-            signalChannel.postMessage({ type: 'SDP_ANSWER', payload: answer });
-            addLog("Sent SDP Answer to peer.");
             
             for (const candidate of pendingIceCandidates.current) {
               await peerConnectionRef.current.addIceCandidate(candidate);
             }
             pendingIceCandidates.current = [];
+            
+            toast({ title: "Peer Connected", description: "Video call established!" });
           } catch (e) {
-            console.error("Error handling offer:", e);
-            addLog("ERROR: Failed to handle offer.");
+            console.error("Error setting remote description:", e);
+            addLog("ERROR: Failed to set remote description.");
           }
-        } else {
-          pendingOffer.current = payload;
-          addLog("Stored pending offer (waiting for peer connection).");
         }
-      }
-      
-      // Handle chat messages
-      if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
-        setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
-      }
+        
+        // Handle SDP Offer for callee
+        if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
+          addLog("Received SDP Offer from peer.");
+          if (peerConnectionRef.current && localStreamRef.current) {
+            try {
+              await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
+              addLog("Remote description set successfully.");
+              
+              const answer = await peerConnectionRef.current.createAnswer();
+              await peerConnectionRef.current.setLocalDescription(answer);
+              addLog("Created and set local SDP Answer.");
+              
+              sendSignal({ type: 'SDP_ANSWER', payload: answer });
+              addLog("Sent SDP Answer to peer.");
+              
+              for (const candidate of pendingIceCandidates.current) {
+                await peerConnectionRef.current.addIceCandidate(candidate);
+              }
+              pendingIceCandidates.current = [];
+            } catch (e) {
+              console.error("Error handling offer:", e);
+              addLog("ERROR: Failed to handle offer.");
+            }
+          } else {
+            pendingOffer.current = payload;
+            addLog("Stored pending offer (waiting for peer connection).");
+          }
+        }
+        
+        // Handle chat messages
+        if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
+          setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
+        }
 
-      // Handle call end
-      if (type === 'END_CALL') {
-         stopMediaStreams();
-         setStep("start");
-         setConnectionStatus("Disconnected");
-         setLogs([]);
-         setRole(null);
-         setIsChatOpen(false);
-         setMessages([]);
-         toast({ title: "Call Ended", description: "Remote peer ended the call." });
+        // Handle call end
+        if (type === 'END_CALL') {
+           stopMediaStreams();
+           setStep("start");
+           setConnectionStatus("Disconnected");
+           setLogs([]);
+           setRole(null);
+           setRoomId(null);
+           setIsChatOpen(false);
+           setMessages([]);
+           toast({ title: "Call Ended", description: "Remote peer ended the call." });
+        }
+      } catch (e) {
+        console.error("Error parsing WebSocket message:", e);
       }
     };
     
-    signalChannel.addEventListener('message', handleMessage);
-    return () => signalChannel.removeEventListener('message', handleMessage);
+    return () => {
+      ws.close();
+    };
   }, [toast]);
 
   const scrollToBottom = () => {
@@ -328,7 +459,7 @@ export default function Signal() {
     const msg = { sender: "You", text: newMessage, time: Date.now() };
     setMessages(prev => [...prev, msg]);
     
-    signalChannel.postMessage({ 
+    sendSignal({ 
         type: 'CHAT_MSG', 
         payload: { text: newMessage, time: Date.now() } 
     });
@@ -342,11 +473,20 @@ export default function Signal() {
     setConnectionStatus("Requesting Media Access...");
     addLog("Initializing WebRTC PeerConnection...");
     
+    // Generate room ID for this call
+    const newRoomId = generateRoomId();
+    setRoomId(newRoomId);
+    addLog(`Created room: ${newRoomId}`);
+    
+    // Join the room via WebSocket
+    sendSignal({ type: 'JOIN', roomId: newRoomId });
+    
     // Request media access first
     const stream = await requestMediaAccess();
     if (!stream) {
       setStep("start");
       setRole(null);
+      setRoomId(null);
       setConnectionStatus("Disconnected");
       return;
     }
@@ -362,30 +502,12 @@ export default function Signal() {
       addLog("Created and set local SDP Offer.");
       
       // Broadcast offer to other tabs
-      signalChannel.postMessage({ type: 'SDP_OFFER', payload: offer });
+      sendSignal({ type: 'SDP_OFFER', payload: offer });
       addLog("SDP Offer broadcasted to local peers.");
       
       // Create WebX link for manual sharing
-      const offerBlueprint: WebXBlueprint = {
-        title: "Incoming Secure Video Call",
-        layout: "video-call",
-        meta: { 
-          version: "1.0", 
-          author: "WebX Signal", 
-          created: Date.now(), 
-          category: "utility",
-          featured: false,
-          downloads: 0
-        },
-        data: [
-          { type: "heading", value: "Secure Video Call Request" },
-          { type: "paragraph", value: "Someone is inviting you to a P2P encrypted video call." },
-          { type: "code", value: JSON.stringify(offer).substring(0, 100) + "..." }
-        ]
-      };
-      
-      const payload = encodeWebX(offerBlueprint);
-      const url = `webx://signal?offer=${payload}`;
+      // Create shareable link with room ID
+      const url = `${window.location.origin}/signal?room=${newRoomId}`;
       setGeneratedLink(url);
       setConnectionStatus("Waiting for Peer...");
       addLog("Waiting for peer to join (auto-connect via local broadcast)...");
@@ -401,11 +523,20 @@ export default function Signal() {
     setStep("joining");
     setConnectionStatus("Requesting Media Access...");
     
+    // Generate room ID if none exists (manual join)
+    if (!roomId) {
+      const newRoomId = generateRoomId();
+      setRoomId(newRoomId);
+      sendSignal({ type: 'JOIN', roomId: newRoomId });
+      addLog(`Created room for manual join: ${newRoomId}`);
+    }
+    
     // Request media access first
     const stream = await requestMediaAccess();
     if (!stream) {
       setStep("start");
       setRole(null);
+      setRoomId(null);
       setConnectionStatus("Disconnected");
       return;
     }
@@ -464,7 +595,7 @@ export default function Signal() {
         addLog("Answer encoded into WebX Link.");
         
         // Auto-broadcast answer
-        signalChannel.postMessage({ type: 'ANSWER', payload: url });
+        sendSignal({ type: 'ANSWER', payload: url });
         addLog("Answer broadcasted to local peers automatically.");
         
         // Auto-connect for callee side too
@@ -935,7 +1066,7 @@ export default function Signal() {
                   size="icon" 
                   className="h-14 w-14 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20"
                   onClick={() => {
-                     signalChannel.postMessage({ type: 'END_CALL' });
+                     sendSignal({ type: 'END_CALL' });
                      stopMediaStreams();
                      setStep("start");
                      setConnectionStatus("Disconnected");

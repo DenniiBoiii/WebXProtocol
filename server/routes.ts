@@ -1,8 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertBlueprintSchema } from "@shared/schema";
 import { encodeWebX, decodeWebX, computeBlueprintHash, SAMPLE_BLUEPRINTS, type WebXBlueprint } from "../client/src/lib/webx";
+
+interface SignalClient {
+  ws: WebSocket;
+  roomId: string | null;
+}
+
+const rooms = new Map<string, Set<WebSocket>>();
+const clients = new Map<WebSocket, SignalClient>();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Seed database with sample blueprints on startup
@@ -132,6 +141,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // WebSocket signaling server for WebX Signal video calls
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws/signal' });
+  
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('[WebSocket] Client connected');
+    clients.set(ws, { ws, roomId: null });
+    
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        const client = clients.get(ws);
+        if (!client) return;
+        
+        switch (message.type) {
+          case 'JOIN': {
+            const roomId = message.roomId;
+            if (!roomId || typeof roomId !== 'string') {
+              ws.send(JSON.stringify({ type: 'ERROR', error: 'Invalid room ID' }));
+              return;
+            }
+            
+            // Leave previous room if any
+            if (client.roomId && rooms.has(client.roomId)) {
+              rooms.get(client.roomId)!.delete(ws);
+              if (rooms.get(client.roomId)!.size === 0) {
+                rooms.delete(client.roomId);
+              }
+            }
+            
+            // Join new room
+            client.roomId = roomId;
+            if (!rooms.has(roomId)) {
+              rooms.set(roomId, new Set());
+            }
+            rooms.get(roomId)!.add(ws);
+            
+            const roomSize = rooms.get(roomId)!.size;
+            console.log(`[WebSocket] Client joined room ${roomId} (${roomSize} clients)`);
+            ws.send(JSON.stringify({ type: 'JOINED', roomId, peerCount: roomSize - 1 }));
+            
+            // Notify other peers in room
+            broadcastToRoom(roomId, ws, { type: 'PEER_JOINED', peerCount: roomSize });
+            break;
+          }
+          
+          case 'SDP_OFFER':
+          case 'SDP_ANSWER':
+          case 'ICE_CANDIDATE':
+          case 'CHAT_MSG':
+          case 'END_CALL': {
+            if (client.roomId) {
+              console.log(`[WebSocket] Relaying ${message.type} in room ${client.roomId}`);
+              broadcastToRoom(client.roomId, ws, message);
+            }
+            break;
+          }
+          
+          default:
+            console.log(`[WebSocket] Unknown message type: ${message.type}`);
+        }
+      } catch (e) {
+        console.error('[WebSocket] Error parsing message:', e);
+      }
+    });
+    
+    ws.on('close', () => {
+      const client = clients.get(ws);
+      if (client && client.roomId && rooms.has(client.roomId)) {
+        rooms.get(client.roomId)!.delete(ws);
+        const remaining = rooms.get(client.roomId)!.size;
+        console.log(`[WebSocket] Client left room ${client.roomId} (${remaining} remaining)`);
+        
+        // Notify remaining peers
+        if (remaining > 0) {
+          broadcastToRoom(client.roomId, ws, { type: 'PEER_LEFT', peerCount: remaining });
+        } else {
+          rooms.delete(client.roomId);
+        }
+      }
+      clients.delete(ws);
+      console.log('[WebSocket] Client disconnected');
+    });
+    
+    ws.on('error', (error) => {
+      console.error('[WebSocket] Error:', error);
+    });
+  });
+  
+  function broadcastToRoom(roomId: string, sender: WebSocket, message: object) {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    
+    const payload = JSON.stringify(message);
+    room.forEach((client) => {
+      if (client !== sender && client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    });
+  }
+  
+  console.log('[WebSocket] Signal server initialized at /ws/signal');
 
   return httpServer;
 }
