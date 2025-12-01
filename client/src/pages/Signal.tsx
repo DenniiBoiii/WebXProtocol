@@ -34,27 +34,37 @@ export default function Signal() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
 
+  const roleRef = useRef(role);
+  const stepRef = useRef(step);
+
+  useEffect(() => {
+    roleRef.current = role;
+    stepRef.current = step;
+  }, [role, step]);
+
   // Initialize BroadcastChannel for local P2P simulation
   useEffect(() => {
     const bc = new BroadcastChannel('webx-signal-v1');
     bc.onmessage = (event) => {
       const { type, payload } = event.data;
       
-      if (type === 'ANSWER' && role === 'caller' && step === 'created') {
+      // Use refs to access current state without closure issues
+      if (type === 'ANSWER' && roleRef.current === 'caller' && stepRef.current === 'created') {
         addLog("Received ANSWER via local broadcast.");
         setRemoteLink(payload);
         toast({ title: "Peer Connected", description: "Received answer signal automatically." });
         // Auto-connect
         setTimeout(() => {
+            // Must pass payload explicitly because remoteLink state might not be updated yet
             handleCompleteHandshake(payload);
         }, 500);
       }
       
-      if (type === 'CHAT_MSG' && step === 'connected') {
+      if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
         setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
       }
 
-      if (type === 'END_CALL' && step === 'connected') {
+      if (type === 'END_CALL' && stepRef.current === 'connected') {
          setStep("start");
          setConnectionStatus("Disconnected");
          setLogs([]);
@@ -66,7 +76,7 @@ export default function Signal() {
     };
     setBroadcastChannel(bc);
     return () => bc.close();
-  }, [role, step]);
+  }, []); // Run once on mount to avoid race conditions with re-creating channel
 
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
 
