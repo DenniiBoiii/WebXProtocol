@@ -233,7 +233,7 @@ export default function Composer() {
       }
       
       const payload = encodeWebX(blueprintToEncode, useCompression);
-      const url = `${window.location.origin}/view?payload=${payload}`;
+      const url = `webx://view?payload=${payload}`;
       setGeneratedLink(url);
       setIsDialogOpen(true);
       setCopied(false);
@@ -357,7 +357,7 @@ export default function Composer() {
                
                <div className="space-y-3 mt-4">
                  <div>
-                   <Label className="text-xs text-muted-foreground mb-2 block">Full URL Link</Label>
+                   <Label className="text-xs text-muted-foreground mb-2 block">WebX Link (Universal)</Label>
                    <div className="flex items-center space-x-2">
                      <div className="grid flex-1 gap-2">
                        <Input
@@ -374,7 +374,7 @@ export default function Composer() {
                          navigator.clipboard.writeText(generatedLink);
                          setCopied(true);
                          setTimeout(() => setCopied(false), 2000);
-                         toast({ title: "Copied", description: "Full URL copied to clipboard." });
+                         toast({ title: "Copied", description: "WebX link copied to clipboard." });
                        }}
                      >
                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -384,12 +384,12 @@ export default function Composer() {
                  </div>
 
                  <div>
-                   <Label className="text-xs text-muted-foreground mb-2 block">WebX Payload Link</Label>
+                   <Label className="text-xs text-muted-foreground mb-2 block">HTTP Fallback Link (Legacy Browsers)</Label>
                    <div className="flex items-center space-x-2">
                      <div className="grid flex-1 gap-2">
                        <Input
                          readOnly
-                         value={`WebX://${generatedLink.split('payload=')[1] || ''}`}
+                         value={`${window.location.origin}/view?payload=${generatedLink.split('payload=')[1] || ''}`}
                          className="bg-white/5 border-white/10 font-mono text-xs h-9"
                        />
                      </div>
@@ -398,10 +398,10 @@ export default function Composer() {
                        size="sm" 
                        className="px-3" 
                        onClick={() => {
-                         navigator.clipboard.writeText(`WebX://${generatedLink.split('payload=')[1] || ''}`);
+                         navigator.clipboard.writeText(`${window.location.origin}/view?payload=${generatedLink.split('payload=')[1] || ''}`);
                          setCopied(true);
                          setTimeout(() => setCopied(false), 2000);
-                         toast({ title: "Copied", description: "WebX payload link copied to clipboard." });
+                         toast({ title: "Copied", description: "HTTP fallback link copied to clipboard." });
                        }}
                      >
                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}

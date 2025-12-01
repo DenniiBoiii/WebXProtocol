@@ -124,7 +124,7 @@ export default function Signal() {
       };
       
       const payload = encodeWebX(offerBlueprint);
-      const url = `${window.location.origin}/signal?offer=${payload}`;
+      const url = `webx://signal?offer=${payload}`;
       setGeneratedLink(url);
       setConnectionStatus("Waiting for Answer...");
       addLog("Offer encoded into WebX Link. Ready to share.");
@@ -147,6 +147,9 @@ export default function Signal() {
     let payload = remoteLink;
     if (remoteLink.includes("offer=")) {
       payload = remoteLink.split("offer=")[1];
+    } else if (remoteLink.includes("webx://")) {
+      const url = new URL(remoteLink.replace("webx://", "http://"));
+      payload = url.searchParams.get("offer") || remoteLink;
     }
     
     const blueprint = decodeWebX(payload);
@@ -171,7 +174,7 @@ export default function Signal() {
         };
         
         const answerPayload = encodeWebX(answerBlueprint);
-        const url = `${window.location.origin}/signal?answer=${answerPayload}`;
+        const url = `webx://signal?answer=${answerPayload}`;
         setGeneratedLink(url);
         setConnectionStatus("Answer Generated");
         addLog("Answer encoded into WebX Link.");
