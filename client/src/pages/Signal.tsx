@@ -73,19 +73,40 @@ export default function Signal() {
     roomIdRef.current = roomId;
   }, [role, step, roomId]);
 
-  // Check for room ID in URL (joining via shared link)
+  // Check for WebX offer in URL (joining via shared link)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const urlRoomId = params.get('room');
-    if (urlRoomId && !roomId && wsConnected) {
-      addLog(`Joining room from link: ${urlRoomId}`);
-      setRoomId(urlRoomId);
-      setRole("callee");
-      setStep("joining");
-      sendSignal({ type: 'JOIN', roomId: urlRoomId });
-      
-      // Auto-start joining process
-      handleJoinCallWithRoom(urlRoomId);
+    const offerPayload = params.get('offer');
+    
+    if (offerPayload && !roomId && wsConnected) {
+      // Decode the WebX blueprint to extract room ID and SDP
+      const blueprint = decodeWebX(offerPayload);
+      if (blueprint && blueprint.data) {
+        const jsonBlock = blueprint.data.find((block: any) => block.type === 'json');
+        if (jsonBlock && jsonBlock.value) {
+          try {
+            const signalData = JSON.parse(jsonBlock.value as string);
+            if (signalData.roomId && signalData.sdp) {
+              addLog(`Decoded WebX offer for room: ${signalData.roomId}`);
+              setRoomId(signalData.roomId);
+              setRole("callee");
+              setStep("joining");
+              
+              // Store the SDP offer for later processing
+              pendingOffer.current = signalData.sdp;
+              
+              // Join the signaling room
+              sendSignal({ type: 'JOIN', roomId: signalData.roomId });
+              
+              // Auto-start joining process
+              handleJoinCallWithRoom(signalData.roomId);
+            }
+          } catch (e) {
+            console.error("Error parsing signal data from blueprint:", e);
+            addLog("ERROR: Invalid WebX offer format.");
+          }
+        }
+      }
     }
   }, [wsConnected]);
 
@@ -505,9 +526,31 @@ export default function Signal() {
       sendSignal({ type: 'SDP_OFFER', payload: offer });
       addLog("SDP Offer broadcasted to local peers.");
       
-      // Create WebX link for manual sharing
-      // Create shareable link with room ID
-      const url = `${window.location.origin}/signal?room=${newRoomId}`;
+      // Create WebX-formatted offer link
+      const offerBlueprint: WebXBlueprint = {
+        title: "WebX Signal: Video Call Invite",
+        layout: "video-call",
+        meta: { 
+          version: "1.0", 
+          author: "WebX Signal", 
+          created: Date.now(), 
+          category: "communication",
+          featured: false,
+          downloads: 0
+        },
+        data: [
+          { type: "heading", value: "Secure P2P Video Call" },
+          { type: "paragraph", value: "You've been invited to a serverless encrypted video call." },
+          { type: "json", value: JSON.stringify({ 
+            roomId: newRoomId, 
+            sdp: offer,
+            type: "offer"
+          })}
+        ]
+      };
+      
+      const payload = encodeWebX(offerBlueprint);
+      const url = `webx://signal?offer=${payload}`;
       setGeneratedLink(url);
       setConnectionStatus("Waiting for Peer...");
       addLog("Waiting for peer to join (auto-connect via local broadcast)...");
@@ -552,10 +595,10 @@ export default function Signal() {
     }
   };
 
-  const handleProcessOffer = () => {
+  const handleProcessOffer = async () => {
     if (!remoteLink) return;
     
-    addLog("Decoding Remote Offer...");
+    addLog("Decoding Remote WebX Offer...");
     setConnectionStatus("Processing Offer...");
     
     // Extract payload from URL or raw string
@@ -568,44 +611,53 @@ export default function Signal() {
     }
     
     const blueprint = decodeWebX(payload);
-    if (blueprint) {
-      addLog("Remote Offer Accepted.");
-      addLog("Generating Local SDP Answer...");
-      
-      setTimeout(() => {
-        const answerBlueprint: WebXBlueprint = {
-          title: "Call Accepted",
-          layout: "video-call",
-          meta: { 
-            version: "1.0", 
-            author: "WebX Signal", 
-            created: Date.now(),
-            category: "utility"
-          },
-          data: [
-            { type: "heading", value: "Call Accepted" },
-            { type: "code", value: "SDP_ANSWER_v=0_o=-_847362_2_IN_IP4..." }
-          ]
-        };
-        
-        const answerPayload = encodeWebX(answerBlueprint);
-        const url = `webx://signal?answer=${answerPayload}`;
-        setGeneratedLink(url);
-        setConnectionStatus("Answer Generated");
-        addLog("Answer encoded into WebX Link.");
-        
-        // Auto-broadcast answer
-        sendSignal({ type: 'ANSWER', payload: url });
-        addLog("Answer broadcasted to local peers automatically.");
-        
-        // Auto-connect for callee side too
-        setConnectionStatus("Connecting...");
-        setTimeout(() => {
-            setStep("connected");
-            setConnectionStatus("Connected");
-        }, 1000);
-
-      }, 1500);
+    if (blueprint && blueprint.data) {
+      // Extract signal data from JSON block
+      const jsonBlock = blueprint.data.find((block: any) => block.type === 'json');
+      if (jsonBlock && jsonBlock.value) {
+        try {
+          const signalData = JSON.parse(jsonBlock.value as string);
+          if (signalData.roomId && signalData.sdp) {
+            addLog(`Remote Offer decoded - Room: ${signalData.roomId}`);
+            
+            // Set room and role
+            setRoomId(signalData.roomId);
+            setRole("callee");
+            
+            // Join the signaling room
+            sendSignal({ type: 'JOIN', roomId: signalData.roomId });
+            addLog("Joined signaling room.");
+            
+            // Store the SDP offer
+            pendingOffer.current = signalData.sdp;
+            
+            // Request media access if not already
+            if (!localStreamRef.current) {
+              const stream = await requestMediaAccess();
+              if (!stream) {
+                setStep("start");
+                setRole(null);
+                setRoomId(null);
+                setConnectionStatus("Disconnected");
+                return;
+              }
+              createPeerConnection(stream);
+            }
+            
+            // Process the offer now
+            if (peerConnectionRef.current && pendingOffer.current) {
+              await processPendingOffer();
+            }
+            
+            addLog("Processing complete - waiting for connection...");
+          }
+        } catch (e) {
+          console.error("Error parsing signal data:", e);
+          toast({ title: "Invalid Offer", description: "Could not parse the WebX offer data.", variant: "destructive" });
+        }
+      } else {
+        toast({ title: "Invalid Format", description: "WebX offer missing signal data.", variant: "destructive" });
+      }
     } else {
       toast({ title: "Invalid Link", description: "Could not decode the WebX offer.", variant: "destructive" });
     }
