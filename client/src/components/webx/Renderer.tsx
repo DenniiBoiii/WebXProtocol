@@ -187,9 +187,9 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
           error: "bg-red-400/10 border-red-400/30 text-red-300",
           success: "bg-green-400/10 border-green-400/30 text-green-300"
         };
-        const severity = block.props?.severity || "info" as keyof typeof severityStyles;
+        const severity = (block.props?.severity || "info") as keyof typeof severityStyles;
         return (
-          <div key={index} className={`my-6 p-4 border-l-4 rounded ${severityStyles[severity]}`}>
+          <div key={index} className={`my-6 p-4 border-l-4 rounded ${severityStyles[severity] || severityStyles.info}`}>
             <p className="font-bold text-sm mb-2">{block.props?.title || "Note"}</p>
             <p className="text-sm">{block.value}</p>
           </div>
@@ -214,7 +214,7 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
         );
       case "markdown":
         return (
-          <div key={index} className="my-4 text-muted-foreground prose dark" dangerlySetInnerHTML={{ __html: block.value || "" }} />
+          <div key={index} className="my-4 text-muted-foreground prose dark" dangerouslySetInnerHTML={{ __html: block.value || "" }} />
         );
       case "qr-code":
         return null; // QR codes rendered differently
@@ -994,6 +994,137 @@ export function WebXRenderer({ blueprint, className }: WebXRendererProps) {
                   </div>
               </div>
           )
+
+      case "gallery":
+        return (
+          <div className="max-w-6xl mx-auto px-6 py-12">
+            <header className="mb-12 text-center">
+               <Badge variant="outline" className="mb-4 border-secondary/50 text-secondary hover:bg-secondary/10">
+                  WebX Protocol // GALLERY
+               </Badge>
+              <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight mb-6 text-glow">
+                {blueprint.title}
+              </h1>
+            </header>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {blueprint.data.map((block, i) => (
+                 <div key={i} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:border-primary/30 transition-all hover:-translate-y-1">
+                    {block.type === 'image' ? (
+                       <div className="aspect-square">
+                          <img src={block.props?.src || block.value} alt={block.props?.alt} className="w-full h-full object-cover" />
+                       </div>
+                    ) : (
+                       <div className="p-6">
+                          {renderBlock(block, i)}
+                       </div>
+                    )}
+                 </div>
+               ))}
+            </div>
+          </div>
+        );
+
+      case "form":
+        return (
+          <div className="min-h-[60vh] flex items-center justify-center p-6">
+            <Card className="w-full max-w-lg bg-white/5 border-white/10 backdrop-blur-xl">
+               <CardHeader>
+                 <CardTitle className="text-2xl font-display">{blueprint.title}</CardTitle>
+               </CardHeader>
+               <CardContent className="space-y-6">
+                 {blueprint.data.map((block, i) => {
+                    if (block.type === 'input') return renderBlock(block, i);
+                    if (block.type === 'button') return (
+                      <div key={i} className="pt-4">
+                        {renderBlock(block, i)}
+                      </div>
+                    );
+                    return renderBlock(block, i);
+                 })}
+               </CardContent>
+            </Card>
+          </div>
+        );
+
+      case "postcard":
+        return (
+          <div className="min-h-[80vh] flex items-center justify-center p-4 md:p-12 bg-[#1a1a1a]">
+            <div className="relative w-full max-w-4xl bg-[#f4ebd0] text-[#2c2c2c] shadow-2xl rounded-sm overflow-hidden transform rotate-1 transition-transform hover:rotate-0 duration-500">
+              {/* Paper texture effect */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-multiply" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/cardboard-flat.png")' }}></div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 h-full min-h-[500px]">
+                {/* Left Side: Message */}
+                <div className="p-8 md:p-12 flex flex-col relative border-b md:border-b-0 md:border-r border-[#d3c8b0]">
+                   <h1 className="font-display text-3xl md:text-4xl font-bold mb-6 text-[#4a3b2a] opacity-80 uppercase tracking-widest" style={{ fontFamily: '"Courier New", Courier, monospace' }}>
+                      {blueprint.title}
+                   </h1>
+                   
+                   <div className="flex-1 space-y-6 font-handwriting text-lg md:text-xl leading-relaxed text-[#2c2c2c]" style={{ fontFamily: '"Caveat", "Brush Script MT", cursive' }}>
+                      {blueprint.data.filter(b => b.type !== 'image').map((block, i) => (
+                        <div key={i}>
+                          {block.type === 'heading' ? <h3 className="font-bold text-2xl mt-4">{block.value}</h3> : 
+                           block.type === 'paragraph' ? <p>{block.value}</p> :
+                           renderBlock(block, i)}
+                        </div>
+                      ))}
+                   </div>
+
+                   <div className="mt-8 pt-6 border-t border-[#d3c8b0] flex justify-between items-center">
+                      <div className="font-handwriting text-sm text-[#666]">
+                         Sent via WebX Protocol
+                      </div>
+                      <div className="font-mono text-xs text-[#888]">
+                         {new Date(blueprint.meta.created).toLocaleDateString()}
+                      </div>
+                   </div>
+                </div>
+
+                {/* Right Side: Address & Stamp */}
+                <div className="p-8 md:p-12 relative bg-[#f0e6cb]">
+                   {/* Stamp Area */}
+                   <div className="absolute top-6 right-6 w-24 h-28 bg-white border-4 border-double border-[#d3c8b0] shadow-sm flex items-center justify-center overflow-hidden transform rotate-3">
+                      <div className="absolute inset-0 bg-red-900/10"></div>
+                      <img src="https://images.unsplash.com/photo-1586084629559-2957314c69c7?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover opacity-80 grayscale contrast-125" alt="Stamp" />
+                   </div>
+                   
+                   {/* Postmark */}
+                   <div className="absolute top-12 right-20 w-24 h-24 rounded-full border-2 border-[#4a3b2a]/30 flex items-center justify-center transform -rotate-12 pointer-events-none">
+                      <div className="text-[10px] font-mono text-[#4a3b2a]/40 text-center leading-tight uppercase">
+                         WebX Protocol<br/>Global Relay<br/>{new Date().getFullYear()}
+                      </div>
+                   </div>
+
+                   {/* Address Lines */}
+                   <div className="mt-40 space-y-8 px-8">
+                      <div className="border-b border-[#d3c8b0] pb-1 min-h-[2rem] flex items-end">
+                         <span className="font-mono text-sm text-[#888] mr-4">TO:</span>
+                         <span className="font-typewriter text-xl text-[#2c2c2c]" style={{ fontFamily: '"Courier New", Courier, monospace' }}>
+                            {blueprint.meta.to || "WebX User"}
+                         </span>
+                      </div>
+                      <div className="border-b border-[#d3c8b0] pb-1 min-h-[2rem]"></div>
+                      <div className="border-b border-[#d3c8b0] pb-1 min-h-[2rem]"></div>
+                      <div className="border-b border-[#d3c8b0] pb-1 min-h-[2rem]"></div>
+                   </div>
+
+                   {/* Image (if any) as a "Polaroid" clipped on */}
+                   {blueprint.data.find(b => b.type === 'image') && (
+                     <div className="absolute bottom-12 right-12 w-48 bg-white p-2 shadow-lg transform -rotate-6 border border-gray-200">
+                        <div className="aspect-square overflow-hidden bg-gray-100 mb-2">
+                           <img src={blueprint.data.find(b => b.type === 'image')?.props?.src} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Polaroid" />
+                        </div>
+                        <div className="text-center font-handwriting text-xs text-gray-500">
+                           Captured Moment
+                        </div>
+                     </div>
+                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
 
       case "article":
       default:

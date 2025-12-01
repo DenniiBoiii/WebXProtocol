@@ -7,32 +7,32 @@ const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
 
 function bytesToBase62(bytes: Uint8Array): string {
   let result = "";
-  let num = 0n;
+  let num = BigInt(0);
   
   for (let i = 0; i < bytes.length; i++) {
-    num = (num << 8n) | BigInt(bytes[i]);
+    num = (num << BigInt(8)) | BigInt(bytes[i]);
   }
   
-  if (num === 0n) return "0";
+  if (num === BigInt(0)) return "0";
   
-  while (num > 0n) {
-    result = BASE62_CHARS[Number(num % 62n)] + result;
-    num = num / 62n;
+  while (num > BigInt(0)) {
+    result = BASE62_CHARS[Number(num % BigInt(62))] + result;
+    num = num / BigInt(62);
   }
   
   return result;
 }
 
 function base62ToBytes(str: string): Uint8Array {
-  let num = 0n;
+  let num = BigInt(0);
   for (let i = 0; i < str.length; i++) {
-    num = num * 62n + BigInt(BASE62_CHARS.indexOf(str[i]));
+    num = num * BigInt(62) + BigInt(BASE62_CHARS.indexOf(str[i]));
   }
   
   const bytes: number[] = [];
-  while (num > 0n) {
-    bytes.unshift(Number(num & 0xFFn));
-    num = num >> 8n;
+  while (num > BigInt(0)) {
+    bytes.unshift(Number(num & BigInt(0xFF)));
+    num = num >> BigInt(8);
   }
   
   return new Uint8Array(bytes);
@@ -352,6 +352,17 @@ export function computeBlueprintHash(blueprint: WebXBlueprint): string {
 // --- Samples ---
 
 export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
+  postcard_demo: {
+      title: "Greetings from Cyber-Tokyo",
+      layout: "postcard",
+      meta: { version: "1.0", author: "NeonDrifter", created: Date.now(), category: "social", featured: true, downloads: 1540, to: "Sarah Connor" },
+      data: [
+          { type: "heading", value: "Wish You Were Here" },
+          { type: "paragraph", value: "The neon rain hasn't stopped for three days. The ramen at Sector 7 is better than they say. I found the old data cache we were looking for." },
+          { type: "paragraph", value: "Meet me at the old terminal when the protocol syncs." },
+          { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&q=80&w=600", alt: "Cyber Tokyo" } }
+      ]
+  },
   welcome: {
     title: "Welcome to WebX",
     layout: "article",

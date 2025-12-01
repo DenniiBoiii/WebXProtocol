@@ -70,6 +70,22 @@ export default function Home() {
     setLocation(`/view?payload=${encodeURIComponent(payload)}`);
   };
 
+  const [isSubmitOpen, setIsSubmitOpen] = useState(false);
+  const [submitStep, setSubmitStep] = useState("idle"); // idle, hashing, signing, publishing, done
+
+  const handleSubmit = () => {
+    setSubmitStep("hashing");
+    setTimeout(() => setSubmitStep("signing"), 1000);
+    setTimeout(() => setSubmitStep("publishing"), 2500);
+    setTimeout(() => {
+      setSubmitStep("done");
+      toast({
+        title: "Blueprint Published",
+        description: "Your creation has been added to the decentralized registry.",
+      });
+    }, 4500);
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden relative selection:bg-primary selection:text-white">
       {/* Abstract Background Elements */}
@@ -883,13 +899,85 @@ export default function Home() {
                   <h2 className="text-4xl font-display font-bold text-white">The Nexus</h2>
                   <p className="text-muted-foreground mt-2">Discover and share WebX blueprints.</p>
               </div>
-              <Button 
-                variant="outline" 
-                className="border-white/10 hover:bg-white/5 gap-2 whitespace-nowrap"
-                onClick={() => toast({ title: "Access Denied", description: "You must be a verified builder to upload to The Nexus.", variant: "destructive" })}
-              >
-                  <Plus className="w-4 h-4" /> Upload Blueprint
-              </Button>
+              <Dialog open={isSubmitOpen} onOpenChange={setIsSubmitOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="border-white/10 hover:bg-white/5 gap-2 whitespace-nowrap"
+                  >
+                      <Plus className="w-4 h-4" /> Upload Blueprint
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md bg-black/90 border-white/10 backdrop-blur-xl text-white">
+                  <DialogHeader>
+                    <DialogTitle>Publish to The Nexus</DialogTitle>
+                    <DialogDescription>
+                      Add your blueprint to the decentralized registry.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  {submitStep === "idle" && (
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Blueprint URL or Payload</Label>
+                        <Input placeholder="Paste WebX:// link..." className="bg-white/5 border-white/10" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Category</Label>
+                        <Select defaultValue="social">
+                          <SelectTrigger className="bg-white/5 border-white/10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="social">Social</SelectItem>
+                            <SelectItem value="documentation">Documentation</SelectItem>
+                            <SelectItem value="utility">Utility</SelectItem>
+                            <SelectItem value="art">Art</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button className="w-full mt-4" onClick={handleSubmit}>
+                        <Share2 className="w-4 h-4 mr-2" /> Publish to Network
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {submitStep !== "idle" && submitStep !== "done" && (
+                    <div className="py-8 flex flex-col items-center justify-center text-center space-y-4">
+                      <div className="relative w-16 h-16 flex items-center justify-center">
+                         <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
+                         <div className="absolute inset-0 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                         <Zap className="w-6 h-6 text-primary animate-pulse" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-bold text-lg animate-pulse">
+                          {submitStep === "hashing" && "Computing Content Hash..."}
+                          {submitStep === "signing" && "Verifying Cryptographic Signature..."}
+                          {submitStep === "publishing" && "Propagating to Mesh Network..."}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-mono">
+                          Block ID: {Math.random().toString(36).substring(2, 15).toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {submitStep === "done" && (
+                    <div className="py-6 flex flex-col items-center justify-center text-center space-y-4">
+                      <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mb-2">
+                        <Check className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Published Successfully</h3>
+                        <p className="text-muted-foreground mt-1">Your blueprint is now discoverable in The Nexus.</p>
+                      </div>
+                      <Button className="w-full" variant="secondary" onClick={() => { setIsSubmitOpen(false); setSubmitStep("idle"); }}>
+                        Done
+                      </Button>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
           </div>
 
           {/* Featured Showcase */}
