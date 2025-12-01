@@ -434,7 +434,8 @@ export default function Signal() {
                             <Radio className="w-4 h-4 animate-pulse" />
                             <span>Answer broadcasted to local peers automatically</span>
                         </div>
-                        <Button className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white" onClick={() => {
+                        
+                        <Button className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white" onClick={() => {
                             setConnectionStatus("Connecting...");
                             setTimeout(() => {
                                 setStep("connected");
@@ -443,6 +444,19 @@ export default function Signal() {
                         }}>
                            Connecting... <Video className="w-4 h-4 ml-2 animate-pulse" />
                         </Button>
+
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                             <p className="text-xs text-white/30 text-center mb-2">If auto-connect fails:</p>
+                             <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="w-full border-white/10 text-white/50 hover:text-white text-xs"
+                                onClick={copyLink}
+                             >
+                                <Copy className="w-3 h-3 mr-2" /> Copy Answer Link Manually
+                             </Button>
+                        </div>
+                     </motion.div>
                      </motion.div>
                    )}
                 </div>
