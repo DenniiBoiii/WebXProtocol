@@ -375,19 +375,6 @@ export const SAMPLE_BLUEPRINTS: Record<string, WebXBlueprint> = {
       { type: "code", value: "WebX://eyJ0aXRsZSI6IldlYlh... (Payload)" }
     ]
   },
-  portfolio_template: {
-    title: "Alex Chen // Design Engineer",
-    layout: "minimal",
-    meta: { version: "1.0", author: "Alex", created: Date.now(), category: "template", downloads: 1840 },
-    data: [
-        { type: "image", value: "", props: { src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200", alt: "Profile" } },
-        { type: "heading", value: "Building the future of interfaces." },
-        { type: "paragraph", value: "I specialize in React, WebGL, and decentralized protocols. Currently exploring the boundaries of client-side rendering." },
-        { type: "list", value: "GitHub,Twitter,Dribbble" },
-        { type: "divider" },
-        { type: "button", value: "Contact Me", props: { variant: "primary" } }
-    ]
-  },
   event_invite: {
       title: "Neon Nights 2025",
       layout: "card",
