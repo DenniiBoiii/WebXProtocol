@@ -23,6 +23,9 @@ const rtcConfig: RTCConfiguration = {
   ]
 };
 
+// Shared broadcast channel for signaling (created once)
+const signalChannel = new BroadcastChannel('webx-signal-v3');
+
 // WebRTC video calling with link-based signaling
 export default function Signal() {
   const [step, setStep] = useState<"start" | "created" | "joining" | "connected">("start");
@@ -39,7 +42,6 @@ export default function Signal() {
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [broadcastChannel, setBroadcastChannel] = useState<BroadcastChannel | null>(null);
   
   // Media stream refs
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -50,7 +52,9 @@ export default function Signal() {
   
   // WebRTC peer connection ref
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
   const pendingIceCandidates = useRef<RTCIceCandidate[]>([]);
+  const pendingOffer = useRef<RTCSessionDescriptionInit | null>(null);
 
   const roleRef = useRef(role);
   const stepRef = useRef(step);
@@ -71,6 +75,7 @@ export default function Signal() {
         audio: true
       });
       setLocalStream(stream);
+      localStreamRef.current = stream;
       setHasMediaAccess(true);
       addLog("Media access granted.");
       
@@ -118,8 +123,7 @@ export default function Signal() {
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         addLog("ICE candidate gathered.");
-        // Send ICE candidate to peer via broadcast channel
-        broadcastChannel?.postMessage({ 
+        signalChannel.postMessage({ 
           type: 'ICE_CANDIDATE', 
           payload: event.candidate.toJSON() 
         });
@@ -151,12 +155,15 @@ export default function Signal() {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
       setLocalStream(null);
       setHasMediaAccess(false);
     }
     setRemoteStream(null);
+    pendingOffer.current = null;
+    pendingIceCandidates.current = [];
   };
 
   // Connect local video when stream changes
@@ -191,23 +198,49 @@ export default function Signal() {
     }
   }, [isAudioEnabled, localStream]);
 
-  // Initialize BroadcastChannel for local P2P signaling
+  // Process pending offer when peer connection becomes available
+  const processPendingOffer = async () => {
+    if (pendingOffer.current && peerConnectionRef.current && localStreamRef.current) {
+      addLog("Processing pending SDP Offer...");
+      try {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(pendingOffer.current));
+        addLog("Remote description set successfully.");
+        
+        const answer = await peerConnectionRef.current.createAnswer();
+        await peerConnectionRef.current.setLocalDescription(answer);
+        addLog("Created and set local SDP Answer.");
+        
+        signalChannel.postMessage({ type: 'SDP_ANSWER', payload: answer });
+        addLog("Sent SDP Answer to peer.");
+        
+        for (const candidate of pendingIceCandidates.current) {
+          await peerConnectionRef.current.addIceCandidate(candidate);
+        }
+        pendingIceCandidates.current = [];
+        pendingOffer.current = null;
+      } catch (e) {
+        console.error("Error processing pending offer:", e);
+        addLog("ERROR: Failed to process pending offer.");
+      }
+    }
+  };
+
+  // Initialize BroadcastChannel message handler
   useEffect(() => {
-    const bc = new BroadcastChannel('webx-signal-v2');
-    bc.onmessage = async (event) => {
+    const handleMessage = async (event: MessageEvent) => {
       const { type, payload } = event.data;
       
       // Handle ICE candidates
-      if (type === 'ICE_CANDIDATE' && peerConnectionRef.current) {
-        try {
-          if (peerConnectionRef.current.remoteDescription) {
+      if (type === 'ICE_CANDIDATE') {
+        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
+          try {
             await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
             addLog("Added remote ICE candidate.");
-          } else {
-            pendingIceCandidates.current.push(new RTCIceCandidate(payload));
+          } catch (e) {
+            console.error("Error adding ICE candidate:", e);
           }
-        } catch (e) {
-          console.error("Error adding ICE candidate:", e);
+        } else {
+          pendingIceCandidates.current.push(new RTCIceCandidate(payload));
         }
       }
       
@@ -218,7 +251,6 @@ export default function Signal() {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
           addLog("Remote description set successfully.");
           
-          // Add pending ICE candidates
           for (const candidate of pendingIceCandidates.current) {
             await peerConnectionRef.current.addIceCandidate(candidate);
           }
@@ -231,36 +263,41 @@ export default function Signal() {
         }
       }
       
-      // Handle SDP Offer for callee (auto-answer)
-      if (type === 'SDP_OFFER' && roleRef.current === 'callee' && peerConnectionRef.current) {
+      // Handle SDP Offer for callee
+      if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
         addLog("Received SDP Offer from peer.");
-        try {
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
-          addLog("Remote description set successfully.");
-          
-          // Create and send answer
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          addLog("Created and set local SDP Answer.");
-          
-          bc.postMessage({ type: 'SDP_ANSWER', payload: answer });
-          addLog("Sent SDP Answer to peer.");
-          
-          // Add pending ICE candidates
-          for (const candidate of pendingIceCandidates.current) {
-            await peerConnectionRef.current.addIceCandidate(candidate);
+        if (peerConnectionRef.current && localStreamRef.current) {
+          try {
+            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
+            addLog("Remote description set successfully.");
+            
+            const answer = await peerConnectionRef.current.createAnswer();
+            await peerConnectionRef.current.setLocalDescription(answer);
+            addLog("Created and set local SDP Answer.");
+            
+            signalChannel.postMessage({ type: 'SDP_ANSWER', payload: answer });
+            addLog("Sent SDP Answer to peer.");
+            
+            for (const candidate of pendingIceCandidates.current) {
+              await peerConnectionRef.current.addIceCandidate(candidate);
+            }
+            pendingIceCandidates.current = [];
+          } catch (e) {
+            console.error("Error handling offer:", e);
+            addLog("ERROR: Failed to handle offer.");
           }
-          pendingIceCandidates.current = [];
-        } catch (e) {
-          console.error("Error handling offer:", e);
-          addLog("ERROR: Failed to handle offer.");
+        } else {
+          pendingOffer.current = payload;
+          addLog("Stored pending offer (waiting for peer connection).");
         }
       }
       
+      // Handle chat messages
       if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
         setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
       }
 
+      // Handle call end
       if (type === 'END_CALL') {
          stopMediaStreams();
          setStep("start");
@@ -272,9 +309,10 @@ export default function Signal() {
          toast({ title: "Call Ended", description: "Remote peer ended the call." });
       }
     };
-    setBroadcastChannel(bc);
-    return () => bc.close();
-  }, []); // Run once on mount to avoid race conditions with re-creating channel
+    
+    signalChannel.addEventListener('message', handleMessage);
+    return () => signalChannel.removeEventListener('message', handleMessage);
+  }, [toast]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -290,8 +328,7 @@ export default function Signal() {
     const msg = { sender: "You", text: newMessage, time: Date.now() };
     setMessages(prev => [...prev, msg]);
     
-    // Broadcast to peer
-    broadcastChannel?.postMessage({ 
+    signalChannel.postMessage({ 
         type: 'CHAT_MSG', 
         payload: { text: newMessage, time: Date.now() } 
     });
@@ -325,7 +362,7 @@ export default function Signal() {
       addLog("Created and set local SDP Offer.");
       
       // Broadcast offer to other tabs
-      broadcastChannel?.postMessage({ type: 'SDP_OFFER', payload: offer });
+      signalChannel.postMessage({ type: 'SDP_OFFER', payload: offer });
       addLog("SDP Offer broadcasted to local peers.");
       
       // Create WebX link for manual sharing
@@ -377,6 +414,11 @@ export default function Signal() {
     createPeerConnection(stream);
     setConnectionStatus("Ready - Waiting for Offer...");
     addLog("Peer connection ready. Listening for incoming offer...");
+    
+    // Check if there's a pending offer that arrived before we were ready
+    if (pendingOffer.current) {
+      await processPendingOffer();
+    }
   };
 
   const handleProcessOffer = () => {
@@ -422,7 +464,7 @@ export default function Signal() {
         addLog("Answer encoded into WebX Link.");
         
         // Auto-broadcast answer
-        broadcastChannel?.postMessage({ type: 'ANSWER', payload: url });
+        signalChannel.postMessage({ type: 'ANSWER', payload: url });
         addLog("Answer broadcasted to local peers automatically.");
         
         // Auto-connect for callee side too
@@ -893,7 +935,7 @@ export default function Signal() {
                   size="icon" 
                   className="h-14 w-14 rounded-full bg-red-600 hover:bg-red-700 shadow-lg shadow-red-900/20"
                   onClick={() => {
-                     broadcastChannel?.postMessage({ type: 'END_CALL' });
+                     signalChannel.postMessage({ type: 'END_CALL' });
                      stopMediaStreams();
                      setStep("start");
                      setConnectionStatus("Disconnected");
