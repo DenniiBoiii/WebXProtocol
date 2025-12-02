@@ -17,14 +17,16 @@ import {
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
 // WebRTC configuration with STUN and free TURN servers for better connectivity
+// Using Open Relay Project servers which support multiple transports
 const rtcConfig: RTCConfiguration = {
   iceServers: [
+    // Google STUN servers (fast, reliable)
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun3.l.google.com:19302' },
-    { urls: 'stun:stun4.l.google.com:19302' },
-    // Free TURN servers from OpenRelay
+    // Open Relay STUN
+    { urls: 'stun:openrelay.metered.ca:80' },
+    // Open Relay TURN servers (UDP)
     {
       urls: 'turn:openrelay.metered.ca:80',
       username: 'openrelayproject',
@@ -34,9 +36,23 @@ const rtcConfig: RTCConfiguration = {
       urls: 'turn:openrelay.metered.ca:443',
       username: 'openrelayproject',
       credential: 'openrelayproject'
+    },
+    // Open Relay TURN servers (TCP - important for restrictive firewalls!)
+    {
+      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
+    },
+    // TURNS (TLS) for maximum compatibility
+    {
+      urls: 'turns:openrelay.metered.ca:443',
+      username: 'openrelayproject',
+      credential: 'openrelayproject'
     }
   ],
-  iceCandidatePoolSize: 10
+  iceCandidatePoolSize: 10,
+  iceTransportPolicy: 'all', // Try all transports (relay + direct)
+  bundlePolicy: 'max-bundle'
 };
 
 // Generate unique room ID
@@ -300,11 +316,23 @@ export default function Signal() {
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        addLog("ICE candidate gathered.");
+        const candidateType = event.candidate.type || 'unknown';
+        const protocol = event.candidate.protocol || 'unknown';
+        addLog(`ICE candidate: ${candidateType} (${protocol})`);
         sendSignal({ 
           type: 'ICE_CANDIDATE', 
           payload: event.candidate.toJSON() 
         });
+      } else {
+        addLog("ICE gathering complete.");
+      }
+    };
+    
+    // Handle ICE gathering state changes (important for debugging!)
+    pc.onicegatheringstatechange = () => {
+      addLog(`ICE gathering state: ${pc.iceGatheringState}`);
+      if (pc.iceGatheringState === 'gathering') {
+        setConnectionStatus("Gathering ICE candidates...");
       }
     };
     
@@ -314,13 +342,34 @@ export default function Signal() {
       if (pc.connectionState === 'connected') {
         setConnectionStatus("Connected");
         setStep("connected");
-      } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-        setConnectionStatus("Connection Lost");
+      } else if (pc.connectionState === 'connecting') {
+        setConnectionStatus("Connecting to peer...");
+      } else if (pc.connectionState === 'failed') {
+        setConnectionStatus("Connection Failed - Try again");
+        toast({
+          title: "Connection Failed",
+          description: "Could not establish peer connection. Both users may need to retry.",
+          variant: "destructive"
+        });
+      } else if (pc.connectionState === 'disconnected') {
+        setConnectionStatus("Peer Disconnected");
       }
     };
     
     pc.oniceconnectionstatechange = () => {
       addLog(`ICE connection state: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'checking') {
+        setConnectionStatus("Checking connectivity...");
+      } else if (pc.iceConnectionState === 'failed') {
+        addLog("ICE connection failed - attempting restart...");
+        // Attempt ICE restart
+        pc.restartIce();
+      }
+    };
+    
+    // Handle signaling state changes
+    pc.onsignalingstatechange = () => {
+      addLog(`Signaling state: ${pc.signalingState}`);
     };
     
     peerConnectionRef.current = pc;
