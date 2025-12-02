@@ -925,6 +925,13 @@ export default function Signal() {
                 return;
               }
               createPeerConnection(stream);
+              
+              // Check if there's a pending offer that arrived while we were getting media access
+              if (pendingOffer.current) {
+                addLog("Processing pending offer that arrived during setup...");
+                await processPendingOffer();
+                return;
+              }
             }
             
             setConnectionStatus("Waiting for SDP Offer...");
