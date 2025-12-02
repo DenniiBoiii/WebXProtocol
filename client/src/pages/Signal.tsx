@@ -13,7 +13,7 @@ import {
   ArrowRight, Radio, ShieldCheck, Globe, Share2, 
   MessageSquare, RefreshCw, Check, Send, X, HelpCircle,
   Link2, Users, Sparkles, ChevronRight, ChevronLeft, SwitchCamera,
-  UserPlus
+  UserPlus, FlipHorizontal
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
@@ -100,6 +100,7 @@ export default function Signal() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [isMirrored, setIsMirrored] = useState(true);
   const [participantCount, setParticipantCount] = useState(1);
   const [messages, setMessages] = useState<{sender: string, text: string, time: number}[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -1448,8 +1449,8 @@ export default function Signal() {
                      autoPlay 
                      playsInline
                      muted
-                     className="w-full h-full object-cover mirror"
-                     style={{ transform: 'scaleX(-1)' }}
+                     className="w-full h-full object-cover"
+                     style={{ transform: isMirrored ? 'scaleX(-1)' : 'none' }}
                   />
                ) : (
                   <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
@@ -1466,8 +1467,20 @@ export default function Signal() {
                      {!isVideoEnabled && <VideoOff className="w-3 h-3 text-red-500" />}
                   </div>
                </div>
-               <div className="absolute top-2 right-2 text-[10px] text-white/50 bg-black/50 px-1.5 py-0.5 rounded">
-                  You
+               <div className="absolute top-2 right-2 flex items-center gap-1">
+                  <button
+                     onPointerDownCapture={(e) => e.stopPropagation()}
+                     onMouseDown={(e) => e.stopPropagation()}
+                     onClick={() => setIsMirrored(!isMirrored)}
+                     className="p-1 rounded bg-black/50 hover:bg-black/70 transition-colors"
+                     title={isMirrored ? "Show as others see you" : "Show mirrored (like a mirror)"}
+                     data-testid="button-toggle-mirror"
+                  >
+                     <FlipHorizontal className={`w-3 h-3 ${isMirrored ? 'text-white/50' : 'text-green-400'}`} />
+                  </button>
+                  <span className="text-[10px] text-white/50 bg-black/50 px-1.5 py-0.5 rounded">
+                     You
+                  </span>
                </div>
             </motion.div>
 
