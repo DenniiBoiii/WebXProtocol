@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Video, Mic, MicOff, VideoOff, PhoneOff, Copy, 
   ArrowRight, Radio, ShieldCheck, Globe, Share2, 
-  MessageSquare, RefreshCw, Check, Send, X
+  MessageSquare, RefreshCw, Check, Send, X, HelpCircle,
+  Link2, Users, Sparkles, ChevronRight, ChevronLeft
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
@@ -43,6 +44,34 @@ function generateRoomId(): string {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
 
+// Tutorial steps configuration
+const TUTORIAL_STEPS = [
+  {
+    title: "Welcome to WebX Signal",
+    description: "A serverless peer-to-peer video calling system. No accounts needed - just share a link to connect!",
+    icon: Sparkles,
+    color: "text-green-400"
+  },
+  {
+    title: "Starting a Call",
+    description: "Click 'Start a Call' to generate a unique invite link. Share this link with anyone you want to video chat with.",
+    icon: Video,
+    color: "text-green-400"
+  },
+  {
+    title: "Joining a Call",
+    description: "Received an invite link? Click 'Join a Call' and paste it, or simply open the link directly in your browser.",
+    icon: Link2,
+    color: "text-blue-400"
+  },
+  {
+    title: "Secure & Private",
+    description: "Your calls are end-to-end encrypted and peer-to-peer. No data passes through central servers once connected.",
+    icon: ShieldCheck,
+    color: "text-emerald-400"
+  }
+];
+
 // WebRTC video calling with link-based signaling
 export default function Signal() {
   const [step, setStep] = useState<"start" | "created" | "joining" | "connected">("start");
@@ -58,6 +87,43 @@ export default function Signal() {
   const [logs, setLogs] = useState<string[]>([]);
   const { toast } = useToast();
   const [_, setLocation] = useLocation();
+  
+  // Tutorial state
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  
+  // Check if first-time user on mount
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem('webx-signal-tutorial-seen');
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+    }
+  }, []);
+  
+  const completeTutorial = () => {
+    localStorage.setItem('webx-signal-tutorial-seen', 'true');
+    setShowTutorial(false);
+    setTutorialStep(0);
+  };
+  
+  const nextTutorialStep = () => {
+    if (tutorialStep < TUTORIAL_STEPS.length - 1) {
+      setTutorialStep(prev => prev + 1);
+    } else {
+      completeTutorial();
+    }
+  };
+  
+  const prevTutorialStep = () => {
+    if (tutorialStep > 0) {
+      setTutorialStep(prev => prev - 1);
+    }
+  };
+  
+  const openTutorial = () => {
+    setTutorialStep(0);
+    setShowTutorial(true);
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Media stream refs
@@ -707,6 +773,153 @@ export default function Signal() {
 
   return (
     <div className="min-h-screen bg-black text-white font-mono selection:bg-green-500 selection:text-black">
+      {/* Tutorial Popup Modal */}
+      <AnimatePresence>
+        {showTutorial && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={(e) => e.target === e.currentTarget && completeTutorial()}
+            data-testid="tutorial-overlay"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+              data-testid="tutorial-modal"
+            >
+              {/* Close button */}
+              <button
+                onClick={completeTutorial}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-10"
+                data-testid="button-close-tutorial"
+              >
+                <X className="w-4 h-4 text-white/70" />
+              </button>
+
+              {/* Progress dots */}
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {TUTORIAL_STEPS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setTutorialStep(idx)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      idx === tutorialStep 
+                        ? 'bg-green-500 w-6' 
+                        : idx < tutorialStep 
+                          ? 'bg-green-500/50' 
+                          : 'bg-white/20'
+                    }`}
+                    data-testid={`tutorial-dot-${idx}`}
+                  />
+                ))}
+              </div>
+
+              {/* Content */}
+              <div className="pt-16 pb-8 px-8">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={tutorialStep}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-center"
+                  >
+                    {/* Icon */}
+                    <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center mb-6 border border-white/10">
+                      {(() => {
+                        const CurrentIcon = TUTORIAL_STEPS[tutorialStep].icon;
+                        return <CurrentIcon className={`w-10 h-10 ${TUTORIAL_STEPS[tutorialStep].color}`} />;
+                      })()}
+                    </div>
+
+                    {/* Title */}
+                    <h2 className="text-2xl font-bold mb-3 text-white">
+                      {TUTORIAL_STEPS[tutorialStep].title}
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-white/60 text-base leading-relaxed max-w-sm mx-auto mb-8">
+                      {TUTORIAL_STEPS[tutorialStep].description}
+                    </p>
+
+                    {/* Visual hint for step 1 and 2 */}
+                    {tutorialStep === 1 && (
+                      <div className="flex justify-center mb-6">
+                        <div className="flex items-center gap-3 px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                          <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <Video className="w-5 h-5 text-green-400" />
+                          </div>
+                          <span className="text-green-400 font-medium">Start a Call</span>
+                          <ChevronRight className="w-4 h-4 text-green-400" />
+                        </div>
+                      </div>
+                    )}
+
+                    {tutorialStep === 2 && (
+                      <div className="flex justify-center mb-6">
+                        <div className="flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <Link2 className="w-5 h-5 text-blue-400" />
+                          </div>
+                          <span className="text-blue-400 font-medium">Join a Call</span>
+                          <ChevronRight className="w-4 h-4 text-blue-400" />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Navigation buttons */}
+                <div className="flex items-center justify-between mt-6">
+                  <Button
+                    variant="ghost"
+                    onClick={prevTutorialStep}
+                    disabled={tutorialStep === 0}
+                    className={`text-white/50 hover:text-white ${tutorialStep === 0 ? 'invisible' : ''}`}
+                    data-testid="button-tutorial-prev"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Back
+                  </Button>
+
+                  <Button
+                    onClick={nextTutorialStep}
+                    className="bg-green-600 hover:bg-green-500 text-white px-6"
+                    data-testid="button-tutorial-next"
+                  >
+                    {tutorialStep === TUTORIAL_STEPS.length - 1 ? (
+                      <>Get Started</>
+                    ) : (
+                      <>
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Skip link */}
+                {tutorialStep < TUTORIAL_STEPS.length - 1 && (
+                  <button
+                    onClick={completeTutorial}
+                    className="block mx-auto mt-4 text-sm text-white/40 hover:text-white/60 transition-colors"
+                    data-testid="button-skip-tutorial"
+                  >
+                    Skip tutorial
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="border-b border-white/10 p-4 flex justify-between items-center bg-black/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setLocation("/")}>
@@ -719,6 +932,14 @@ export default function Signal() {
           </div>
         </div>
         <div className="flex items-center gap-4 text-xs text-white/50">
+          <button
+            onClick={openTutorial}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+            data-testid="button-open-tutorial"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="hidden md:inline">How it works</span>
+          </button>
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4" />
             <span className="hidden md:inline">End-to-End Encrypted</span>
