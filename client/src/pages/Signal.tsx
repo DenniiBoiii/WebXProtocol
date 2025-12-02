@@ -152,6 +152,7 @@ export default function Signal() {
   const [hasMediaAccess, setHasMediaAccess] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const callContainerRef = useRef<HTMLDivElement>(null);
   
   // WebRTC peer connection ref
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -1403,6 +1404,7 @@ export default function Signal() {
         {/* Active Call Interface */}
         {step === "connected" && (
           <motion.div 
+            ref={callContainerRef}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="relative h-[80vh] rounded-2xl overflow-hidden bg-zinc-900 border border-white/10 shadow-2xl"
@@ -1434,8 +1436,11 @@ export default function Signal() {
             {/* Self View (PIP) - Shows local camera feed */}
             <motion.div 
                drag
-               dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
-               className="absolute bottom-24 right-6 w-48 h-32 bg-black/80 border border-white/20 rounded-xl overflow-hidden shadow-xl cursor-move z-10"
+               dragConstraints={callContainerRef}
+               dragMomentum={false}
+               dragElastic={0.1}
+               whileDrag={{ scale: 1.05 }}
+               className="absolute bottom-24 right-6 w-48 h-32 bg-black/80 border border-white/20 rounded-xl overflow-hidden shadow-xl cursor-move z-40"
             >
                {hasMediaAccess && isVideoEnabled ? (
                   <video 
