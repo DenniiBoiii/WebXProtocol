@@ -12,7 +12,8 @@ import {
   Video, Mic, MicOff, VideoOff, PhoneOff, Copy, 
   ArrowRight, Radio, ShieldCheck, Globe, Share2, 
   MessageSquare, RefreshCw, Check, Send, X, HelpCircle,
-  Link2, Users, Sparkles, ChevronRight, ChevronLeft
+  Link2, Users, Sparkles, ChevronRight, ChevronLeft, SwitchCamera,
+  UserPlus
 } from "lucide-react";
 import { encodeWebX, decodeWebX, WebXBlueprint } from "@/lib/webx";
 
@@ -97,6 +98,9 @@ export default function Signal() {
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [participantCount, setParticipantCount] = useState(1);
   const [messages, setMessages] = useState<{sender: string, text: string, time: number}[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
@@ -211,19 +215,8 @@ export default function Signal() {
   const handleJoinCallWithRoom = async (joinRoomId: string) => {
     setConnectionStatus("Requesting Media Access...");
     
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    }).catch((error) => {
-      console.error("Media access error:", error);
-      addLog("ERROR: Media access denied or unavailable.");
-      toast({ 
-        title: "Camera/Mic Access Required", 
-        description: "Please allow camera and microphone access for video calls.",
-        variant: "destructive" 
-      });
-      return null;
-    });
+    // Use requestMediaAccess for proper camera detection and facing mode support
+    const stream = await requestMediaAccess();
     
     if (!stream) {
       setStep("start");
@@ -231,15 +224,6 @@ export default function Signal() {
       setRoomId(null);
       setConnectionStatus("Disconnected");
       return;
-    }
-    
-    setLocalStream(stream);
-    localStreamRef.current = stream;
-    setHasMediaAccess(true);
-    addLog("Media access granted.");
-    
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = stream;
     }
     
     createPeerConnection(stream);
@@ -251,18 +235,34 @@ export default function Signal() {
     }
   };
 
+  // Check for multiple cameras (for flip camera feature)
+  const checkForMultipleCameras = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter(device => device.kind === 'videoinput');
+      setHasMultipleCameras(videoInputs.length > 1);
+      addLog(`Found ${videoInputs.length} camera(s).`);
+    } catch (error) {
+      console.error("Error checking cameras:", error);
+    }
+  };
+
   // Request camera and microphone access
-  const requestMediaAccess = async () => {
+  const requestMediaAccess = async (preferredFacingMode?: "user" | "environment") => {
     try {
       addLog("Requesting camera and microphone access...");
+      const mode = preferredFacingMode || facingMode;
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { facingMode: mode },
         audio: true
       });
       setLocalStream(stream);
       localStreamRef.current = stream;
       setHasMediaAccess(true);
       addLog("Media access granted.");
+      
+      // Check for multiple cameras
+      await checkForMultipleCameras();
       
       // Connect stream to local video element
       if (localVideoRef.current) {
@@ -279,6 +279,61 @@ export default function Signal() {
         variant: "destructive" 
       });
       return null;
+    }
+  };
+
+  // Flip camera (switch between front and back cameras)
+  const flipCamera = async () => {
+    if (!localStreamRef.current || !peerConnectionRef.current) return;
+    
+    const newFacingMode = facingMode === "user" ? "environment" : "user";
+    addLog(`Switching to ${newFacingMode === "user" ? "front" : "back"} camera...`);
+    
+    try {
+      // Get new video stream only (reuse existing audio to avoid permission prompts)
+      const newVideoStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: newFacingMode },
+        audio: false
+      });
+      
+      // Stop old video tracks
+      localStreamRef.current.getVideoTracks().forEach(track => track.stop());
+      
+      // Replace track in peer connection
+      const newVideoTrack = newVideoStream.getVideoTracks()[0];
+      const senders = peerConnectionRef.current.getSenders();
+      const videoSender = senders.find(sender => sender.track?.kind === 'video');
+      
+      if (videoSender && newVideoTrack) {
+        await videoSender.replaceTrack(newVideoTrack);
+        addLog("Camera switched successfully.");
+      }
+      
+      // Update local stream with new video track and existing audio track
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      const updatedStream = new MediaStream([newVideoTrack, audioTrack].filter(Boolean));
+      
+      setLocalStream(updatedStream);
+      localStreamRef.current = updatedStream;
+      setFacingMode(newFacingMode);
+      
+      // Update local video element
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = updatedStream;
+      }
+      
+      toast({
+        title: "Camera Flipped",
+        description: `Now using ${newFacingMode === "user" ? "front" : "back"} camera.`
+      });
+    } catch (error) {
+      console.error("Error flipping camera:", error);
+      addLog("ERROR: Failed to flip camera.");
+      toast({
+        title: "Camera Flip Failed",
+        description: "Could not switch cameras. Your device may not support this.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -1400,9 +1455,24 @@ export default function Signal() {
                   size="icon" 
                   className={`h-12 w-12 rounded-full border-white/10 backdrop-blur-md ${!isVideoEnabled ? 'bg-red-500/20 text-red-500 border-red-500/50' : 'bg-white/10 hover:bg-white/20'}`}
                   onClick={() => setIsVideoEnabled(!isVideoEnabled)}
+                  data-testid="button-toggle-video"
                >
                   {isVideoEnabled ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                </Button>
+
+               {/* Camera Flip Button - Only shown on devices with multiple cameras */}
+               {hasMultipleCameras && (
+                  <Button 
+                     variant="outline" 
+                     size="icon" 
+                     className="h-12 w-12 rounded-full border-white/10 bg-white/10 hover:bg-white/20 backdrop-blur-md"
+                     onClick={flipCamera}
+                     data-testid="button-flip-camera"
+                     title={`Switch to ${facingMode === "user" ? "back" : "front"} camera`}
+                  >
+                     <SwitchCamera className="w-5 h-5" />
+                  </Button>
+               )}
 
                <Button 
                   variant="destructive" 
@@ -1437,8 +1507,51 @@ export default function Signal() {
                   size="icon" 
                   className="h-12 w-12 rounded-full border-white/10 bg-white/10 hover:bg-white/20 backdrop-blur-md"
                   onClick={copyLink}
+                  data-testid="button-share-link"
                >
                   <Share2 className="w-5 h-5" />
+               </Button>
+
+               {/* Invite More Button - copies room link for sharing */}
+               <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-12 w-12 rounded-full border-white/10 bg-blue-500/20 hover:bg-blue-500/30 backdrop-blur-md text-blue-400"
+                  onClick={() => {
+                     if (generatedLink) {
+                        navigator.clipboard.writeText(generatedLink);
+                        toast({ 
+                           title: "Invite Link Copied", 
+                           description: "Share this link to invite someone to a new call with you." 
+                        });
+                     } else if (roomId) {
+                        // Generate a new link for the current room
+                        const inviteBlueprint: WebXBlueprint = {
+                          title: "WebX Signal Call Invitation",
+                          layout: "card",
+                          meta: { version: "1.0", author: "WebX Signal", created: Date.now() },
+                          data: [{ type: "json" as const, value: JSON.stringify({ room: roomId }) }]
+                        };
+                        const payload = encodeWebX(inviteBlueprint);
+                        const inviteUrl = `webx://signal?call=${payload}`;
+                        navigator.clipboard.writeText(inviteUrl);
+                        setGeneratedLink(inviteUrl);
+                        toast({ 
+                           title: "Invite Link Copied", 
+                           description: "Share this link to invite someone to join your call." 
+                        });
+                     } else {
+                        toast({
+                           title: "No Room Active",
+                           description: "Start or join a call first.",
+                           variant: "destructive"
+                        });
+                     }
+                  }}
+                  data-testid="button-invite-more"
+                  title="Copy invite link"
+               >
+                  <UserPlus className="w-5 h-5" />
                </Button>
             </div>
 
