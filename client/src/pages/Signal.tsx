@@ -566,154 +566,195 @@ export default function Signal() {
     }
   };
 
-  // Initialize WebSocket connection
+  // Initialize WebSocket connection with auto-reconnect
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/signal`;
     
-    addLog("Connecting to signaling server...");
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-    
-    ws.onopen = () => {
-      addLog("Connected to signaling server.");
-      setWsConnected(true);
-    };
-    
-    ws.onclose = () => {
-      addLog("Disconnected from signaling server.");
-      setWsConnected(false);
-    };
-    
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      addLog("ERROR: WebSocket connection failed.");
-    };
-    
-    ws.onmessage = async (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        const { type, payload } = message;
+    const connectWebSocket = () => {
+      addLog("Connecting to signaling server...");
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+      
+      ws.onopen = () => {
+        addLog("Connected to signaling server.");
+        setWsConnected(true);
+        reconnectAttempts.current = 0;
         
-        // Handle room join confirmation
-        if (type === 'JOINED') {
-          addLog(`Joined room ${message.roomId} (${message.peerCount} peer(s) waiting)`);
-          if (message.peerCount > 0 && roleRef.current === 'callee') {
-            addLog("Peer is already in room, waiting for offer...");
+        // Re-join room if we were in one
+        if (roomIdRef.current) {
+          addLog(`Rejoining room ${roomIdRef.current}...`);
+          ws.send(JSON.stringify({ type: 'JOIN', roomId: roomIdRef.current }));
+          
+          // Re-send offer if we're the caller
+          if (roleRef.current === 'caller' && peerConnectionRef.current?.localDescription) {
+            setTimeout(() => {
+              if (peerConnectionRef.current?.localDescription) {
+                addLog("Re-sending SDP Offer after reconnect...");
+                sendSignal({ type: 'SDP_OFFER', payload: peerConnectionRef.current.localDescription });
+              }
+            }, 500);
           }
         }
+      };
+      
+      ws.onclose = () => {
+        addLog("Disconnected from signaling server.");
+        setWsConnected(false);
         
-        // Handle peer join notification
-        if (type === 'PEER_JOINED') {
-          addLog(`Peer joined the room (${message.peerCount} total)`);
-          // If we're the caller and peer just joined, send our offer
-          if (roleRef.current === 'caller' && peerConnectionRef.current) {
-            const offer = peerConnectionRef.current.localDescription;
-            if (offer) {
-              addLog("Re-sending SDP Offer to new peer...");
-              sendSignal({ type: 'SDP_OFFER', payload: offer });
+        // Attempt reconnection with exponential backoff
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          reconnectAttempts.current++;
+          addLog(`Reconnecting in ${delay/1000}s (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})...`);
+          reconnectTimeoutRef.current = setTimeout(connectWebSocket, delay);
+        } else {
+          addLog("ERROR: Max reconnection attempts reached. Please refresh the page.");
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        addLog("ERROR: WebSocket connection failed.");
+      };
+    
+      ws.onmessage = async (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          const { type, payload } = message;
+          
+          // Handle room join confirmation
+          if (type === 'JOINED') {
+            addLog(`Joined room ${message.roomId} (${message.peerCount} peer(s) waiting)`);
+            if (message.peerCount > 0 && roleRef.current === 'callee') {
+              addLog("Peer is already in room, waiting for offer...");
             }
-          }
-        }
-        
-        // Handle peer left
-        if (type === 'PEER_LEFT') {
-          addLog(`Peer left the room (${message.peerCount} remaining)`);
-        }
-        
-        // Handle ICE candidates
-        if (type === 'ICE_CANDIDATE') {
-          if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
-            try {
-              await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
-              addLog("Added remote ICE candidate.");
-            } catch (e) {
-              console.error("Error adding ICE candidate:", e);
-            }
-          } else {
-            pendingIceCandidates.current.push(new RTCIceCandidate(payload));
-          }
-        }
-        
-        // Handle SDP Answer for caller
-        if (type === 'SDP_ANSWER' && roleRef.current === 'caller' && peerConnectionRef.current) {
-          addLog("Received SDP Answer from peer.");
-          try {
-            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
-            addLog("Remote description set successfully.");
-            
-            for (const candidate of pendingIceCandidates.current) {
-              await peerConnectionRef.current.addIceCandidate(candidate);
-            }
-            pendingIceCandidates.current = [];
-            
-            toast({ title: "Peer Connected", description: "Video call established!" });
-          } catch (e) {
-            console.error("Error setting remote description:", e);
-            addLog("ERROR: Failed to set remote description.");
-          }
-        }
-        
-        // Handle SDP Offer for callee (skip if already processed)
-        if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
-          if (hasProcessedOffer.current) {
-            addLog("Skipping duplicate SDP Offer (already processed).");
-            return;
           }
           
-          addLog("Received SDP Offer from peer via WebSocket.");
-          if (peerConnectionRef.current && localStreamRef.current) {
-            hasProcessedOffer.current = true;
+          // Handle peer join notification
+          if (type === 'PEER_JOINED') {
+            addLog(`Peer joined the room (${message.peerCount} total)`);
+            // If we're the caller and peer just joined, send our offer
+            if (roleRef.current === 'caller' && peerConnectionRef.current) {
+              const offer = peerConnectionRef.current.localDescription;
+              if (offer) {
+                addLog("Re-sending SDP Offer to new peer...");
+                sendSignal({ type: 'SDP_OFFER', payload: offer });
+              }
+            }
+          }
+          
+          // Handle peer left
+          if (type === 'PEER_LEFT') {
+            addLog(`Peer left the room (${message.peerCount} remaining)`);
+          }
+          
+          // Handle ICE candidates
+          if (type === 'ICE_CANDIDATE') {
+            if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
+              try {
+                await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(payload));
+                addLog("Added remote ICE candidate.");
+              } catch (e) {
+                console.error("Error adding ICE candidate:", e);
+              }
+            } else {
+              pendingIceCandidates.current.push(new RTCIceCandidate(payload));
+            }
+          }
+          
+          // Handle SDP Answer for caller
+          if (type === 'SDP_ANSWER' && roleRef.current === 'caller' && peerConnectionRef.current) {
+            addLog("Received SDP Answer from peer.");
             try {
               await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
               addLog("Remote description set successfully.");
-              
-              const answer = await peerConnectionRef.current.createAnswer();
-              await peerConnectionRef.current.setLocalDescription(answer);
-              addLog("Created and set local SDP Answer.");
-              
-              sendSignal({ type: 'SDP_ANSWER', payload: answer });
-              addLog("Sent SDP Answer to peer.");
               
               for (const candidate of pendingIceCandidates.current) {
                 await peerConnectionRef.current.addIceCandidate(candidate);
               }
               pendingIceCandidates.current = [];
+              
+              toast({ title: "Peer Connected", description: "Video call established!" });
             } catch (e) {
-              console.error("Error handling offer:", e);
-              addLog("ERROR: Failed to handle offer.");
-              hasProcessedOffer.current = false;
+              console.error("Error setting remote description:", e);
+              addLog("ERROR: Failed to set remote description.");
             }
-          } else {
-            pendingOffer.current = payload;
-            addLog("Stored pending offer (waiting for peer connection).");
           }
-        }
-        
-        // Handle chat messages
-        if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
-          setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
-        }
+          
+          // Handle SDP Offer for callee (skip if already processed)
+          if (type === 'SDP_OFFER' && roleRef.current === 'callee') {
+            if (hasProcessedOffer.current) {
+              addLog("Skipping duplicate SDP Offer (already processed).");
+              return;
+            }
+            
+            addLog("Received SDP Offer from peer via WebSocket.");
+            if (peerConnectionRef.current && localStreamRef.current) {
+              hasProcessedOffer.current = true;
+              try {
+                await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(payload));
+                addLog("Remote description set successfully.");
+                
+                const answer = await peerConnectionRef.current.createAnswer();
+                await peerConnectionRef.current.setLocalDescription(answer);
+                addLog("Created and set local SDP Answer.");
+                
+                sendSignal({ type: 'SDP_ANSWER', payload: answer });
+                addLog("Sent SDP Answer to peer.");
+                
+                for (const candidate of pendingIceCandidates.current) {
+                  await peerConnectionRef.current.addIceCandidate(candidate);
+                }
+                pendingIceCandidates.current = [];
+              } catch (e) {
+                console.error("Error handling offer:", e);
+                addLog("ERROR: Failed to handle offer.");
+                hasProcessedOffer.current = false;
+              }
+            } else {
+              pendingOffer.current = payload;
+              addLog("Stored pending offer (waiting for peer connection).");
+            }
+          }
+          
+          // Handle chat messages
+          if (type === 'CHAT_MSG' && stepRef.current === 'connected') {
+            setMessages(prev => [...prev, { sender: "Peer", text: payload.text, time: payload.time }]);
+          }
 
-        // Handle call end
-        if (type === 'END_CALL') {
-           stopMediaStreams();
-           setStep("start");
-           setConnectionStatus("Disconnected");
-           setLogs([]);
-           setRole(null);
-           setRoomId(null);
-           setIsChatOpen(false);
-           setMessages([]);
-           toast({ title: "Call Ended", description: "Remote peer ended the call." });
+          // Handle call end
+          if (type === 'END_CALL') {
+            stopMediaStreams();
+            setStep("start");
+            setConnectionStatus("Disconnected");
+            setLogs([]);
+            setRole(null);
+            setRoomId(null);
+            setIsChatOpen(false);
+            setMessages([]);
+            toast({ title: "Call Ended", description: "Remote peer ended the call." });
+          }
+        } catch (e) {
+          console.error("Error parsing WebSocket message:", e);
         }
-      } catch (e) {
-        console.error("Error parsing WebSocket message:", e);
-      }
+      };
     };
     
+    // Initial connection
+    connectWebSocket();
+    
     return () => {
-      ws.close();
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
+      }
     };
   }, [toast]);
 

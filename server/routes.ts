@@ -6,7 +6,7 @@ import { insertBlueprintSchema } from "@shared/schema";
 import { encodeWebX, decodeWebX, computeBlueprintHash, SAMPLE_BLUEPRINTS, type WebXBlueprint } from "../client/src/lib/webx";
 
 interface SignalClient {
-  ws: WebSocket;
+  ws: WebSocket & { isAlive?: boolean };
   roomId: string | null;
 }
 
@@ -145,9 +145,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket signaling server for WebX Signal video calls
   const wss = new WebSocketServer({ server: httpServer, path: '/ws/signal' });
   
+  // Heartbeat interval to keep connections alive (every 25 seconds)
+  const HEARTBEAT_INTERVAL = 25000;
+  const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws: WebSocket) => {
+      const client = clients.get(ws) as SignalClient | undefined;
+      if (!client) return;
+      
+      if (client.ws.isAlive === false) {
+        console.log('[WebSocket] Terminating stale connection');
+        return ws.terminate();
+      }
+      
+      client.ws.isAlive = false;
+      ws.ping();
+    });
+  }, HEARTBEAT_INTERVAL);
+  
+  wss.on('close', () => {
+    clearInterval(heartbeatInterval);
+  });
+  
   wss.on('connection', (ws: WebSocket) => {
     console.log('[WebSocket] Client connected');
-    clients.set(ws, { ws, roomId: null });
+    const extWs = ws as WebSocket & { isAlive?: boolean };
+    extWs.isAlive = true;
+    clients.set(ws, { ws: extWs, roomId: null });
+    
+    // Handle pong response
+    ws.on('pong', () => {
+      const client = clients.get(ws);
+      if (client) {
+        client.ws.isAlive = true;
+      }
+    });
     
     ws.on('message', (data: Buffer) => {
       try {
