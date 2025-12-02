@@ -164,6 +164,9 @@ export default function Signal() {
   const wsRef = useRef<WebSocket | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
+  
+  // Pending invite state (for Android gesture requirement)
+  const [pendingInviteRoom, setPendingInviteRoom] = useState<string | null>(null);
 
   const roleRef = useRef(role);
   const stepRef = useRef(step);
@@ -176,11 +179,12 @@ export default function Signal() {
   }, [role, step, roomId]);
 
   // Check for WebX call invite in URL (joining via shared link)
+  // NOTE: We don't auto-join here - Android requires a user gesture before requesting camera/mic
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const callPayload = params.get('call');
     
-    if (callPayload && !roomId && wsConnected) {
+    if (callPayload && !roomId && !pendingInviteRoom && wsConnected) {
       // Decode the WebX blueprint to extract room ID
       const blueprint = decodeWebX(callPayload);
       if (blueprint && blueprint.data) {
@@ -190,15 +194,8 @@ export default function Signal() {
             const signalData = JSON.parse(jsonBlock.value as string);
             if (signalData.room) {
               addLog(`Decoded WebX call invite for room: ${signalData.room}`);
-              setRoomId(signalData.room);
-              setRole("callee");
-              setStep("joining");
-              
-              // Join the signaling room (SDP will come via WebSocket)
-              sendSignal({ type: 'JOIN', roomId: signalData.room });
-              
-              // Auto-start joining process
-              handleJoinCallWithRoom(signalData.room);
+              // Store pending invite - user must tap to join (Android gesture requirement)
+              setPendingInviteRoom(signalData.room);
             }
           } catch (e) {
             console.error("Error parsing call data from blueprint:", e);
@@ -207,7 +204,55 @@ export default function Signal() {
         }
       }
     }
-  }, [wsConnected]);
+  }, [wsConnected, pendingInviteRoom]);
+  
+  // Handle accepting a pending invite (triggered by user tap)
+  const acceptPendingInvite = async () => {
+    if (!pendingInviteRoom) return;
+    
+    const joinRoomId = pendingInviteRoom;
+    setPendingInviteRoom(null);
+    
+    // Clear URL param to prevent re-triggering
+    window.history.replaceState({}, '', '/signal');
+    
+    // Show joining state
+    setConnectionStatus("Requesting Media Access...");
+    
+    // Request media access FIRST (with user gesture!)
+    const stream = await requestMediaAccess();
+    
+    if (!stream) {
+      // Permission denied or failed - stay on start screen
+      setStep("start");
+      setRole(null);
+      setRoomId(null);
+      setConnectionStatus("Disconnected");
+      toast({
+        title: "Camera/Mic Access Required",
+        description: "Please allow camera and microphone access to join the call.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Media access granted - now join the room
+    setRoomId(joinRoomId);
+    setRole("callee");
+    setStep("joining");
+    
+    // Join the signaling room (SDP will come via WebSocket)
+    sendSignal({ type: 'JOIN', roomId: joinRoomId });
+    
+    // Create peer connection and process any pending offer
+    createPeerConnection(stream);
+    setConnectionStatus("Ready - Waiting for Offer...");
+    addLog("Peer connection ready. Listening for incoming offer...");
+    
+    if (pendingOffer.current) {
+      await processPendingOffer();
+    }
+  };
 
   const addLog = (msg: string) => setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   
@@ -1070,6 +1115,7 @@ export default function Signal() {
                                 setConnectionStatus("Disconnected");
                                 setLogs([]);
                                 setRole(null);
+                                setPendingInviteRoom(null);
                             }
                         } else {
                             stopMediaStreams();
@@ -1077,6 +1123,7 @@ export default function Signal() {
                             setConnectionStatus("Disconnected");
                             setLogs([]);
                             setRole(null);
+                            setPendingInviteRoom(null);
                         }
                     }}
                 >
@@ -1085,8 +1132,55 @@ export default function Signal() {
             </div>
         )}
         
+        {/* Pending Invite Screen (Android gesture requirement) */}
+        {step === "start" && pendingInviteRoom && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center space-y-8 py-12"
+          >
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Video className="w-12 h-12 text-green-400" />
+            </div>
+            
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight">
+                You've Been Invited
+              </h1>
+              <p className="text-lg text-white/60 max-w-md mx-auto">
+                Someone wants to video call with you. Tap below to enable your camera and microphone, then join the call.
+              </p>
+            </div>
+            
+            <Button
+              size="lg"
+              onClick={acceptPendingInvite}
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-6 px-12 text-lg rounded-full shadow-lg shadow-green-500/25"
+              data-testid="button-accept-invite"
+            >
+              <Video className="w-5 h-5 mr-2" />
+              Tap to Join Call
+            </Button>
+            
+            <p className="text-xs text-white/40 max-w-sm mx-auto">
+              You'll be asked to allow camera and microphone access. This is required for the video call.
+            </p>
+            
+            <button
+              onClick={() => {
+                setPendingInviteRoom(null);
+                window.history.replaceState({}, '', '/signal');
+              }}
+              className="text-sm text-white/40 hover:text-white/60 transition-colors mt-4"
+              data-testid="button-dismiss-invite"
+            >
+              Not now
+            </button>
+          </motion.div>
+        )}
+
         {/* Start Screen */}
-        {step === "start" && (
+        {step === "start" && !pendingInviteRoom && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
