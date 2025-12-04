@@ -13,16 +13,22 @@ export default function Implement() {
 
   const codeBlocks = [
     {
-      title: "1. Clone the Repository",
-      code: `git clone https://github.com/webx-protocol/webx-core.git
-cd webx-core
-npm install`,
+      title: "1. Install via npm",
+      code: `# Install from npm
+npm install webx-core
+
+# Or clone the source
+git clone https://github.com/webx-protocol/webx-core.git`,
       language: "bash"
     },
     {
-      title: "2. Import WebX from Source",
-      code: `import { decodeWebX, encodeWebX } from './lib/webx';
-// Or if publishing: import { decodeWebX, encodeWebX } from 'webx-protocol';`,
+      title: "2. Import WebX",
+      code: `import { 
+  encodeWebX, 
+  decodeWebX, 
+  createBlueprint, 
+  block 
+} from 'webx-core';`,
       language: "typescript"
     },
     {
@@ -34,26 +40,21 @@ console.log(blueprint.data);`,
       language: "typescript"
     },
     {
-      title: "4. Create a Blueprint",
-      code: `const blueprint = {
-  title: "My First WebX Page",
-  layout: "article",
-  data: [
-    { type: "heading", value: "Hello World" },
-    { type: "paragraph", value: "This is a WebX blueprint." }
-  ],
-  meta: {
-    version: "1.0",
-    author: "Your Name",
-    created: Date.now()
-  }
-};`,
+      title: "4. Create a Blueprint (Easy Way)",
+      code: `// Use helpers for quick creation
+const blueprint = createBlueprint("My First Page", [
+  block.heading("Hello World"),
+  block.paragraph("This is my WebX page."),
+  block.list(["Feature 1", "Feature 2"]),
+  block.button("Learn More", "primary")
+], { author: "Your Name" });`,
       language: "typescript"
     },
     {
       title: "5. Encode & Share",
       code: `const payload = encodeWebX(blueprint);
-const link = \`https://yourapp.com/view?payload=\${payload}\`;
+const link = \`webx://page?data=\${payload}\`;
+// Or use: createWebXUrl(blueprint)
 console.log(link); // Share this!`,
       language: "typescript"
     },
