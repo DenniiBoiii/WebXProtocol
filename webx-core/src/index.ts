@@ -1,6 +1,49 @@
 import { z } from "zod";
 import pako from "pako";
 
+// --- Cross-platform utilities ---
+
+const isNode = typeof window === 'undefined' && typeof global !== 'undefined';
+
+function toBase64(data: string): string {
+  if (isNode) {
+    return Buffer.from(data, 'binary').toString('base64');
+  }
+  return btoa(data);
+}
+
+function fromBase64(data: string): string {
+  if (isNode) {
+    return Buffer.from(data, 'base64').toString('binary');
+  }
+  return atob(data);
+}
+
+function getTextEncoder(): { encode: (s: string) => Uint8Array } {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder();
+  }
+  return {
+    encode: (s: string) => Buffer.from(s, 'utf-8')
+  };
+}
+
+function getTextDecoder(): { decode: (b: Uint8Array) => string } {
+  if (typeof TextDecoder !== 'undefined') {
+    return new TextDecoder();
+  }
+  return {
+    decode: (b: Uint8Array) => Buffer.from(b).toString('utf-8')
+  };
+}
+
+function getBlobSize(str: string): number {
+  if (typeof Blob !== 'undefined') {
+    return new Blob([str]).size;
+  }
+  return Buffer.byteLength(str, 'utf-8');
+}
+
 // --- Encoding: Base62 (more efficient than base64) - saves ~15-20% on URL length ---
 
 const BASE62_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -274,11 +317,12 @@ export function encodeWebX(blueprint: WebXBlueprint, options: EncodeOptions = {}
     
     if (compress) {
       const compressed = pako.gzip(data);
-      data = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
+      data = toBase64(String.fromCharCode.apply(null, Array.from(compressed)));
       data = "z:" + data;
     }
     
-    const binary = new TextEncoder().encode(data);
+    const encoder = getTextEncoder();
+    const binary = encoder.encode(data);
     return bytesToBase62(binary);
   } catch (e) {
     console.error("Failed to encode WebX blueprint", e);
@@ -307,11 +351,12 @@ export function decodeWebX(payload: string): WebXBlueprint | null {
   try {
     const cleanPayload = payload.trim();
     const bytes = base62ToBytes(cleanPayload);
-    let json = new TextDecoder().decode(bytes);
+    const decoder = getTextDecoder();
+    let json = decoder.decode(bytes);
     
     if (json.startsWith("z:")) {
       json = json.slice(2);
-      const binary = atob(json);
+      const binary = fromBase64(json);
       const compressed = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) {
         compressed[i] = binary.charCodeAt(i);
@@ -384,13 +429,13 @@ export function parseWebXUrl(url: string): WebXBlueprint | null {
  */
 export function getPayloadMetrics(blueprint: WebXBlueprint) {
   const original = JSON.stringify(blueprint);
-  const originalSize = new Blob([original]).size;
+  const originalSize = getBlobSize(original);
   
   try {
     const compressed = pako.gzip(original);
     const compressedSize = compressed.length;
-    const base64Compressed = btoa(String.fromCharCode.apply(null, Array.from(compressed)));
-    const base64CompressedSize = new Blob([base64Compressed]).size;
+    const base64Compressed = toBase64(String.fromCharCode.apply(null, Array.from(compressed)));
+    const base64CompressedSize = getBlobSize(base64Compressed);
     
     const minified = minifyKeys(blueprint);
     const stringDict = createStringDict(blueprint);
@@ -400,7 +445,7 @@ export function getPayloadMetrics(blueprint: WebXBlueprint) {
     
     const optimizedCompressed = pako.gzip(optimized);
     const optimizedBase62 = bytesToBase62(optimizedCompressed);
-    const optimizedSize = new Blob([optimizedBase62]).size;
+    const optimizedSize = getBlobSize(optimizedBase62);
     
     return {
       originalSize,
