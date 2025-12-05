@@ -1,5 +1,5 @@
 {
-  "name": "webx-core",
+  "name": "@kbhole/webx-core",
   "version": "1.0.0-alpha.1",
   "description": "WebX Protocol - Serverless web protocol where URLs carry complete page blueprints",
   "main": "dist/index.js",

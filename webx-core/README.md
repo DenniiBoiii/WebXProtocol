@@ -2,7 +2,7 @@
 
 > **The serverless web protocol where URLs carry complete page blueprints.**
 
-[![npm version](https://badge.fury.io/js/webx-core.svg)](https://www.npmjs.com/package/webx-core)
+[![npm version](https://badge.fury.io/js/@kbhole/webx-core.svg)](https://www.npmjs.com/package/@kbhole/webx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 WebX is a next-generation web protocol that reimagines how content is shared on the internet. Instead of traditional hyperlinks that point to servers, WebX links carry the actual page blueprint encoded directly in the URL.
@@ -21,21 +21,21 @@ WebX is a next-generation web protocol that reimagines how content is shared on 
 ## Installation
 
 ```bash
-npm install webx-core
+npm install @kbhole/webx-core
 ```
 
 ```bash
-yarn add webx-core
+yarn add @kbhole/webx-core
 ```
 
 ```bash
-pnpm add webx-core
+pnpm add @kbhole/webx-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { encodeWebX, decodeWebX, createBlueprint, block } from 'webx-core';
+import { encodeWebX, decodeWebX, createBlueprint, block } from '@kbhole/webx-core';
 
 // Create a simple blueprint
 const blueprint = createBlueprint("Hello WebX", [
