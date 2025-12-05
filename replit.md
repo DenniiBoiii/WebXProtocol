@@ -136,6 +136,33 @@ blueprints table:
 - Free TURN servers (OpenRelay) included for better connectivity
 - Room IDs can be shared as WebX links for easy joining
 
+## NPM Package
+
+The WebX Protocol core library is published as an open-source npm package:
+
+**Package:** [@kbhole/webx-core](https://www.npmjs.com/package/@kbhole/webx-core)
+
+```bash
+npm install @kbhole/webx-core
+```
+
+**Features:**
+- Full TypeScript support with type definitions
+- Cross-platform (Node.js + Browser)
+- Zero server dependencies
+- 22+ content block types
+- 60-75% URL compression via Base62 + gzip
+
+**GitHub Repository:** [DenniiBoiii/WebXProtocol](https://github.com/DenniiBoiii/WebXProtocol)
+
+**Package Location:** `webx-core/` directory contains the standalone npm package with:
+- `src/index.ts` - Core protocol implementation
+- `package.json` - Package configuration with ESM/CJS exports
+- `README.md` - Usage documentation
+- `LICENSE` - MIT license
+
+**CI/CD:** GitHub Actions workflow (`.github/workflows/publish-npm.yml`) auto-publishes on push to main when webx-core files change.
+
 ## External Dependencies
 
 ### Third-Party Services
