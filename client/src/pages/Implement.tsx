@@ -15,10 +15,10 @@ export default function Implement() {
     {
       title: "1. Install via npm",
       code: `# Install from npm
-npm install webx-core
+npm install @kbhole/webx-core
 
 # Or clone the source
-git clone https://github.com/webx-protocol/webx-core.git`,
+git clone https://github.com/DenniiBoiii/WebXProtocol.git`,
       language: "bash"
     },
     {
@@ -28,7 +28,7 @@ git clone https://github.com/webx-protocol/webx-core.git`,
   decodeWebX, 
   createBlueprint, 
   block 
-} from 'webx-core';`,
+} from '@kbhole/webx-core';`,
       language: "typescript"
     },
     {
@@ -130,7 +130,7 @@ console.log(link); // Share this!`,
                     Get WebX rendering in your application with just a few lines of code. No backend required.
                   </p>
                   <div className="bg-black/50 border border-white/10 rounded-lg p-4 font-mono text-sm text-green-400 overflow-x-auto">
-                    git clone https://github.com/webx-protocol/webx-core.git<br />npm install && npm run dev
+                    npm install @kbhole/webx-core
                   </div>
                 </div>
               </div>
@@ -300,8 +300,8 @@ file.webx → editor → edit → export/share`
                   <p className="text-sm text-muted-foreground">Blueprint schema, renderer, and sample implementations</p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-yellow-400 font-bold min-w-fit">⏳ Coming</span>
-                  <p className="text-sm text-muted-foreground">Official npm package publication</p>
+                  <span className="text-green-400 font-bold min-w-fit">✓ Complete</span>
+                  <p className="text-sm text-muted-foreground">Official npm package: @kbhole/webx-core</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="text-yellow-400 font-bold min-w-fit">⏳ Coming</span>

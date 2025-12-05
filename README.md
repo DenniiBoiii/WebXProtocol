@@ -2,7 +2,7 @@
 
 > **The serverless web protocol where URLs carry complete page blueprints.**
 
-[![npm version](https://badge.fury.io/js/webx-core.svg)](https://www.npmjs.com/package/webx-core)
+[![npm version](https://badge.fury.io/js/@kbhole/webx-core.svg)](https://www.npmjs.com/package/@kbhole/webx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 WebX is a next-generation web protocol that reimagines how content is shared on the internet. Instead of traditional hyperlinks that point to servers, WebX links carry the actual page blueprint encoded directly in the URL.
@@ -21,21 +21,21 @@ WebX is a next-generation web protocol that reimagines how content is shared on 
 ## Installation
 
 ```bash
-npm install webx-core
+npm install @kbhole/webx-core
 ```
 
 ```bash
-yarn add webx-core
+yarn add @kbhole/webx-core
 ```
 
 ```bash
-pnpm add webx-core
+pnpm add @kbhole/webx-core
 ```
 
 ## Quick Start
 
 ```typescript
-import { encodeWebX, decodeWebX, createBlueprint, block } from 'webx-core';
+import { encodeWebX, decodeWebX, createBlueprint, block } from '@kbhole/webx-core';
 
 // Create a simple blueprint
 const blueprint = createBlueprint("Hello WebX", [
@@ -63,7 +63,7 @@ console.log(decoded?.title); // "Hello WebX"
 Encode a WebX blueprint into a URL-safe string.
 
 ```typescript
-import { encodeWebX, WebXBlueprint } from 'webx-core';
+import { encodeWebX, WebXBlueprint } from '@kbhole/webx-core';
 
 const blueprint: WebXBlueprint = {
   title: "My Page",
@@ -85,7 +85,7 @@ const compressed = encodeWebX(blueprint, { compress: true });
 Decode a WebX payload string back into a blueprint.
 
 ```typescript
-import { decodeWebX } from 'webx-core';
+import { decodeWebX } from '@kbhole/webx-core';
 
 const blueprint = decodeWebX("3x7K9...");
 if (blueprint) {
@@ -99,7 +99,7 @@ if (blueprint) {
 Create a complete WebX URL from a blueprint.
 
 ```typescript
-import { createWebXUrl } from 'webx-core';
+import { createWebXUrl } from '@kbhole/webx-core';
 
 const url = createWebXUrl(blueprint);
 // Returns: webx://page?data=3x7K9...
@@ -110,7 +110,7 @@ const url = createWebXUrl(blueprint);
 Parse a WebX URL and extract the blueprint.
 
 ```typescript
-import { parseWebXUrl } from 'webx-core';
+import { parseWebXUrl } from '@kbhole/webx-core';
 
 const blueprint = parseWebXUrl("webx://page?data=3x7K9...");
 ```
@@ -122,7 +122,7 @@ const blueprint = parseWebXUrl("webx://page?data=3x7K9...");
 Create a minimal blueprint with sensible defaults.
 
 ```typescript
-import { createBlueprint, block } from 'webx-core';
+import { createBlueprint, block } from '@kbhole/webx-core';
 
 const blueprint = createBlueprint(
   "My Article",
@@ -145,7 +145,7 @@ const blueprint = createBlueprint(
 Convenient helpers for creating content blocks:
 
 ```typescript
-import { block } from 'webx-core';
+import { block } from '@kbhole/webx-core';
 
 block.heading("Title")
 block.paragraph("Some text")
@@ -167,7 +167,7 @@ block.json({ key: "value" })
 Validate an object against the WebX schema.
 
 ```typescript
-import { validateBlueprint } from 'webx-core';
+import { validateBlueprint } from '@kbhole/webx-core';
 
 const result = validateBlueprint(unknownData);
 if (result.success) {
@@ -182,7 +182,7 @@ if (result.success) {
 Generate a deterministic hash for content verification.
 
 ```typescript
-import { computeBlueprintHash } from 'webx-core';
+import { computeBlueprintHash } from '@kbhole/webx-core';
 
 const hash = computeBlueprintHash(blueprint);
 // Returns: "A1B2C3D4" (8-char hex hash)
@@ -193,7 +193,7 @@ const hash = computeBlueprintHash(blueprint);
 Analyze compression efficiency.
 
 ```typescript
-import { getPayloadMetrics } from 'webx-core';
+import { getPayloadMetrics } from '@kbhole/webx-core';
 
 const metrics = getPayloadMetrics(blueprint);
 console.log(`Original: ${metrics.originalSize} bytes`);
@@ -268,7 +268,7 @@ import type {
   ContentBlockType,
   LayoutType,
   EncodeOptions 
-} from 'webx-core';
+} from '@kbhole/webx-core';
 ```
 
 ## Browser Support
@@ -337,7 +337,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [WebX Protocol Website](https://webxnexus.com)
 - [Interactive Demo](https://webxnexus.com/composer)
 - [Whitepaper](https://webxnexus.com/whitepaper)
-- [GitHub Issues](https://github.com/webx-protocol/webx-core/issues)
+- [GitHub Repository](https://github.com/DenniiBoiii/WebXProtocol)
+- [npm Package](https://www.npmjs.com/package/@kbhole/webx-core)
 
 ---
 
