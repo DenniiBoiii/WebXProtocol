@@ -3,17 +3,19 @@ import pako from "pako";
 
 // --- Cross-platform utilities ---
 
+declare const global: typeof globalThis | undefined;
+
 const isNode = typeof window === 'undefined' && typeof global !== 'undefined';
 
 function toBase64(data: string): string {
-  if (isNode) {
+  if (isNode && typeof Buffer !== 'undefined') {
     return Buffer.from(data, 'binary').toString('base64');
   }
   return btoa(data);
 }
 
 function fromBase64(data: string): string {
-  if (isNode) {
+  if (isNode && typeof Buffer !== 'undefined') {
     return Buffer.from(data, 'base64').toString('binary');
   }
   return atob(data);
@@ -23,25 +25,34 @@ function getTextEncoder(): { encode: (s: string) => Uint8Array } {
   if (typeof TextEncoder !== 'undefined') {
     return new TextEncoder();
   }
-  return {
-    encode: (s: string) => Buffer.from(s, 'utf-8')
-  };
+  if (typeof Buffer !== 'undefined') {
+    return {
+      encode: (s: string) => Buffer.from(s, 'utf-8')
+    };
+  }
+  throw new Error('No TextEncoder available');
 }
 
 function getTextDecoder(): { decode: (b: Uint8Array) => string } {
   if (typeof TextDecoder !== 'undefined') {
     return new TextDecoder();
   }
-  return {
-    decode: (b: Uint8Array) => Buffer.from(b).toString('utf-8')
-  };
+  if (typeof Buffer !== 'undefined') {
+    return {
+      decode: (b: Uint8Array) => Buffer.from(b).toString('utf-8')
+    };
+  }
+  throw new Error('No TextDecoder available');
 }
 
 function getBlobSize(str: string): number {
   if (typeof Blob !== 'undefined') {
     return new Blob([str]).size;
   }
-  return Buffer.byteLength(str, 'utf-8');
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.byteLength(str, 'utf-8');
+  }
+  return str.length;
 }
 
 // --- Encoding: Base62 (more efficient than base64) - saves ~15-20% on URL length ---

@@ -37,17 +37,19 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/webx-protocol/webx-core.git"
+    "url": "https://github.com/DenniiBoiii/WebXProtocol.git"
   },
   "homepage": "https://webxnexus.com",
   "bugs": {
-    "url": "https://github.com/webx-protocol/webx-core/issues"
+    "url": "https://github.com/DenniiBoiii/WebXProtocol/issues"
   },
   "dependencies": {
     "pako": "^2.1.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pako": "^2.0.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
