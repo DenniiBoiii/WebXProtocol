@@ -1,0 +1,96 @@
+Run npm publish --access public
+
+> webx-core@1.0.0-alpha.1 prepublishOnly
+> npm run build
+
+
+> webx-core@1.0.0-alpha.1 build
+> tsup src/index.ts --format cjs,esm --dts --clean
+
+CLI Building entry: src/index.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Target: es2020
+CLI Cleaning output folder
+CJS Build start
+ESM Build start
+[warn] ▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:12:6:
+      12 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:10:6:
+      10 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:11:6:
+      11 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+
+[warn] ▲ [WARNING] The condition "types" here will never be used as it comes after both "import" and "require" [package.json]
+
+    package.json:12:6:
+      12 │       "types": "./dist/index.d.ts"
+         ╵       ~~~~~~~
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:10:6:
+      10 │       "import": "./dist/index.mjs",
+         ╵       ~~~~~~~~
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:11:6:
+      11 │       "require": "./dist/index.js",
+         ╵       ~~~~~~~~~
+
+
+ESM dist/index.mjs 11.66 KB
+ESM ⚡️ Build success in 27ms
+CJS dist/index.js 14.15 KB
+CJS ⚡️ Build success in 27ms
+DTS Build start
+DTS ⚡️ Build success in 1506ms
+DTS dist/index.d.ts  11.35 KB
+DTS dist/index.d.mts 11.35 KB
+npm warn publish npm auto-corrected some errors in your package.json when publishing.  Please run "npm pkg fix" to address these errors.
+npm warn publish errors corrected:
+npm warn publish "repository.url" was normalized to "git+https://github.com/DenniiBoiii/WebXProtocol.git"
+npm notice
+npm notice 📦  webx-core@1.0.0-alpha.1
+npm notice Tarball Contents
+npm notice 1.1kB LICENSE
+npm notice 9.1kB README.md
+npm notice 11.6kB dist/index.d.mts
+npm notice 11.6kB dist/index.d.ts
+npm notice 14.5kB dist/index.js
+npm notice 11.9kB dist/index.mjs
+npm notice 1.4kB package.json
+npm notice Tarball Details
+npm notice name: webx-core
+npm notice version: 1.0.0-alpha.1
+npm notice filename: webx-core-1.0.0-alpha.1.tgz
+npm notice package size: 10.8 kB
+npm notice unpacked size: 61.2 kB
+npm notice shasum: cdc5f4b6e198d08b57bd2c733bb013d8eb8fa02b
+npm notice integrity: sha512-8dEPqgRKay4fF[...]/ii3Yq2d9M2/g==
+npm notice total files: 7
+npm notice
+npm notice Publishing to https://registry.npmjs.org/ with tag latest and public access
+npm notice Access token expired or revoked. Please try logging in again.
+npm error code E404
+npm error 404 Not Found - PUT https://registry.npmjs.org/webx-core - Not found
+npm error 404
+npm error 404  'webx-core@1.0.0-alpha.1' is not in this registry.
+npm error 404
+npm error 404 Note that you can also install from a
+npm error 404 tarball, folder, http url, or git url.
+npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2025-12-05T04_04_56_292Z-debug-0.log
+Error: Process completed with exit code 1.
