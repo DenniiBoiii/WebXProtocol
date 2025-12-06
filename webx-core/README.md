@@ -337,7 +337,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 - [WebX Protocol Website](https://webxnexus.com)
 - [Interactive Demo](https://webxnexus.com/composer)
 - [Whitepaper](https://webxnexus.com/whitepaper)
-- [GitHub Issues](https://github.com/webx-protocol/webx-core/issues)
+- [GitHub Repository](https://github.com/DenniiBoiii/WebXProtocol)
+- [GitHub Issues](https://github.com/DenniiBoiii/WebXProtocol/issues)
 
 ---
 
